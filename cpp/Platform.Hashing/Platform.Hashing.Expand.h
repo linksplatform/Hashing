@@ -1,9 +1,9 @@
 #pragma once
 
-// based on https://security.stackexchange.com/a/209892
-
 #ifndef PLATFORM_HASHING_EXPAND
 #define PLATFORM_HASHING_EXPAND
+
+// Based on https://security.stackexchange.com/a/209892
 
 namespace Platform::Hashing
 {

@@ -1,9 +1,9 @@
 #pragma once
 
-// based on https://stackoverflow.com/a/7115547/710069
-
 #ifndef PLATFORM_HASHING_TUPLE
 #define PLATFORM_HASHING_TUPLE
+
+// Based on https://stackoverflow.com/a/7115547/710069
 
 #include <tuple>
 
