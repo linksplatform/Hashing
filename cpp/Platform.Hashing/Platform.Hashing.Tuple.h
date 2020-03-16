@@ -15,7 +15,8 @@ namespace Platform::Hashing
         static void Combine(std::uint32_t &hashAccumulator, const TupleType &tuple)
         {
             Tuple<TupleType, Index - 1>::Combine(hashAccumulator, tuple);
-            Hashing::Combine(hashAccumulator, std::get<Index>(tuple));
+            std::size_t hash = Hashing::Hash(std::get<Index>(tuple));
+            Hashing::Combine(hashAccumulator, hash);
         }
     };
 
@@ -24,21 +25,22 @@ namespace Platform::Hashing
     {
         static void Combine(std::uint32_t &hashAccumulator, const TupleType &tuple)
         {
-            Hashing::Combine(hashAccumulator, std::get<0>(tuple));
+            std::size_t hash = Hashing::Hash(std::get<0>(tuple));
+            Hashing::Combine(hashAccumulator, hash);
         }
     };
 }
 
 namespace std
 {
-    template <typename ... TT>
-    struct hash<std::tuple<TT...>>
+    template <typename ... Types>
+    struct hash<std::tuple<Types...>>
     {
-        size_t operator()(const std::tuple<TT...> &tuple) const
+        std::size_t operator()(const std::tuple<Types...> &tuple) const
         {
-            std::uint32_t seed = 0;
-            Platform::Hashing::Tuple<std::tuple<TT...>>::Combine(seed, tuple);
-            return seed;
+            std::uint32_t hash = 0;
+            Platform::Hashing::Tuple<std::tuple<Types...>>::Combine(hash, tuple);
+            return Platform::Hashing::Expand(hash);
         }
     };
 }

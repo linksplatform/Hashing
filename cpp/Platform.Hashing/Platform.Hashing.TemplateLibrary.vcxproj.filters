@@ -30,5 +30,13 @@
     <ClInclude Include="Platform.Hashing.Hash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Platform.Hashing.Expand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\crc32c.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

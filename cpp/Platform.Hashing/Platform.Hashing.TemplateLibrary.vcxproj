@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Platform.Hashing.Expand.h" />
     <ClInclude Include="Platform.Hashing.Hash.h" />
     <ClInclude Include="Platform.Hashing.Combine.h" />
     <ClInclude Include="Platform.Hashing.h" />
