@@ -13,10 +13,10 @@ namespace Platform::Hashing
 
     template<typename T> std::size_t Hash(T &&value)
     {
-        if constexpr (is_std_hashable<T>::value)
+        if constexpr (is_std_hashable<typename std::decay<T>::type>::value)
         {
-            std::hash<T> hasher;
-            return static_cast<std::uint32_t>(hasher(value));
+            std::hash<typename std::decay<T>::type> hasher;
+            return hasher(std::forward<T>(value));
         }
         else
         {
@@ -26,11 +26,11 @@ namespace Platform::Hashing
         }
     }
 
-    template<typename ... Args> std::size_t Hash(Args... args)
+    template<typename ... Args> std::size_t Hash(Args&&... args)
     {
         std::tuple<Args...> argsTuple = { args... };
         std::hash<std::tuple<Args...>> hasher;
-        return static_cast<std::size_t>(hasher(argsTuple));
+        return hasher(argsTuple);
     }
 }
 
