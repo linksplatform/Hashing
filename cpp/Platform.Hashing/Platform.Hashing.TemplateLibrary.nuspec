@@ -5,10 +5,10 @@
     <title>LinksPlatform's Platform.Hashing Template Library</title>
     <summary>LinksPlatform's Platform.Hashing is a Template Library what contains abstract class templates.</summary>
     <description>LinksPlatform's Platform.Hashing is a Template Library what contains set of C++ abstract class templates. Use Platform.Hashing.h file to include the library.</description>
-    <releaseNotes>Added dependency to Crc32C NuGet package.
-Icon embedded in the package.
-Target framework of the package set to native.</releaseNotes>
-    <version>0.0.2</version>
+    <releaseNotes>Hash overload with multiple arguments now uses rvalue reference.
+Added support for passing complex types into Hash function.
+Fixed bug with incorrect static_cast.</releaseNotes>
+    <version>0.0.3</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
