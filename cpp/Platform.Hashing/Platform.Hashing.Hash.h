@@ -3,6 +3,8 @@
 #ifndef PLATFORM_HASHING_HASH
 #define PLATFORM_HASHING_HASH
 
+#include <functional>
+
 namespace Platform::Hashing
 {
 
@@ -21,8 +23,7 @@ namespace Platform::Hashing
 #endif
 
 
-
-    template<typename T> std::size_t Hash(T &&value)
+    template<typename T> std::size_t Hash(const T& value)
     {
         if constexpr (is_std_hashable<typename std::decay<T>::type>)
         {
@@ -37,11 +38,10 @@ namespace Platform::Hashing
         }
     }
 
-    template<typename ... Args> std::size_t Hash(Args&&... args)
+    template<typename ... Args> std::size_t Hash(const Args&... args)
     {
-        std::tuple<Args...> argsTuple = { args... };
         std::hash<std::tuple<Args...>> hasher;
-        return hasher(argsTuple);
+        return hasher(std::tie(args...));
     }
 }
 
