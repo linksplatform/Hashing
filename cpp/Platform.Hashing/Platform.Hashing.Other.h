@@ -1,7 +1,9 @@
 #pragma once
 
-#ifndef PLATFORM_HASHING_PLATFORM_HASHING_OTHER_H
-#define PLATFORM_HASHING_PLATFORM_HASHING_OTHER_H
+#ifndef PLATFORM_HASHING_OTHER_H
+#define PLATFORM_HASHING_OTHER_H
+
+#include "Platform.Hashing.Hash.h"
 
 namespace std
 {

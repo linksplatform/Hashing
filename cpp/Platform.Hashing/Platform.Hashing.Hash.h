@@ -5,6 +5,8 @@
 
 #include <functional>
 
+#include "Platform.Hashing.Expand.h"
+
 namespace Platform::Hashing
 {
 

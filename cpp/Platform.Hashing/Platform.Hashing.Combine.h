@@ -4,6 +4,8 @@
 #define PLATFORM_HASHING_COMBINE
 
 #include <crc32c.c>
+#include <cstdint>
+
 
 namespace Platform::Hashing
 {
