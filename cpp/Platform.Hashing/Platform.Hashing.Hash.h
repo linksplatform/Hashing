@@ -12,16 +12,16 @@ namespace Platform::Hashing
 
 #ifndef __cpp_lib_concepts
     template <typename T, typename = std::void_t<>>
-    struct is_std_hashable_struct : std::false_type { };
+    struct is_std_hashable_t : std::false_type { };
 
     template <typename T>
-    struct is_std_hashable_struct<T, std::void_t<decltype(std::declval<std::hash<T>>()(std::declval<T>()))>> : std::true_type { };
+    struct is_std_hashable_t<T, std::void_t<decltype(std::declval<std::hash<T>>()(std::declval<T>()))>> : std::true_type { };
 
     template <typename T>
-    inline constexpr bool is_std_hashable = is_std_hashable_struct<T>::value;
+    inline constexpr bool is_std_hashable = is_std_hashable_t<T>::value;
 
     template <typename T>
-    inline constexpr bool not_std_hashable = !is_std_hashable_struct<T>::value;
+    inline constexpr bool not_std_hashable = !is_std_hashable_t<T>::value;
 #else
     template <typename T>
     concept is_std_hashable = requires(T object) {std::hash<T>{}(object);};
