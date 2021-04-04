@@ -11,7 +11,7 @@ namespace std
     {
         size_t operator()(const T& item) const noexcept
         {
-            return Platform::Hashing::TrivialHash(item);
+            return Platform::Hashing::RawHash(item);
         }
     };
 #else

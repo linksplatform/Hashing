@@ -29,6 +29,12 @@ namespace Platform::Hashing
 #endif
 
 
+    template<typename T> std::size_t RawHash(T &&value)
+    {
+        std::uint32_t hash = 0;
+        Combine(hash, value);
+        return Expand(hash);
+    }
 
     template<typename T> std::size_t Hash(T &&value)
     {
@@ -39,18 +45,8 @@ namespace Platform::Hashing
         }
         else
         {
-            std::uint32_t hash = 0;
-            Combine(hash, value);
-            return Expand(hash);
+            return RawHash(value);
         }
-    }
-
-    // Analogue of Hash without trying to call std :: hash
-    template<typename T> std::size_t TrivialHash(T &&value)
-    {
-        std::uint32_t hash = 0;
-        Combine(hash, value);
-        return Expand(hash);
     }
 
     template<typename ... Args> std::size_t Hash(Args&&... args)
