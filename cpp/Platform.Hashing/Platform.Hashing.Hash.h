@@ -29,19 +29,19 @@ namespace Platform::Hashing
 #endif
 
 
-    template<typename T> std::size_t RawHash(T &&value)
+    template<typename T> std::size_t RawHash(const T &value)
     {
         std::uint32_t hash = 0;
         Combine(hash, value);
         return Expand(hash);
     }
 
-    template<typename T> std::size_t Hash(T &&value)
+    template<typename T> std::size_t Hash(const T &value)
     {
         if constexpr (is_std_hashable<typename std::decay<T>::type>)
         {
             std::hash<typename std::decay<T>::type> hasher;
-            return hasher(std::forward<T>(value));
+            return hasher(value);
         }
         else
         {
@@ -49,7 +49,7 @@ namespace Platform::Hashing
         }
     }
 
-    template<typename ... Args> std::size_t Hash(Args&&... args)
+    template<typename ... Args> std::size_t Hash(const Args&... args)
     {
         std::hash<std::tuple<Args...>> hasher;
         return hasher(std::tie(args...));

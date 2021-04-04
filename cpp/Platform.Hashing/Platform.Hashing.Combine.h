@@ -3,7 +3,7 @@
 #ifndef PLATFORM_HASHING_COMBINE
 #define PLATFORM_HASHING_COMBINE
 
-#include <crc32c.h>
+#include <crc32c.c>
 
 namespace Platform::Hashing
 {
