@@ -38,8 +38,7 @@ namespace Platform::Hashing
 
     template<typename T> std::size_t Hash(const T &value)
     {
-        // Как вам такая идея? Это позволит перегрузить const char*, не затронув char*
-        // Также, если будет перегружен std::hash<T>, то std::hash<const T> тоже будет работать (и наоборот)
+        // Просто слегка подправит работу с const char*
         if constexpr (is_std_hashable_v<T>)
         {
             std::hash<T> hasher;
