@@ -11,16 +11,15 @@ namespace std
     template<Platform::Hashing::not_std_hashable T>
     struct hash<T>
     {
-        size_t operator()(const T &item) const noexcept
+        size_t operator()(const T &object) const noexcept
         {
-            return Platform::Hashing::RawHash(item);
+            return Platform::Hashing::HashRaw(object);
         }
     };
 #else
-
+    /// ...
 #endif
 
 }
-
 
 #endif //PLATFORM_HASHING_PLATFORM_HASHING_OTHER_H

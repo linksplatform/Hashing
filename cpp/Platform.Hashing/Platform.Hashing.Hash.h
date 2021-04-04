@@ -9,30 +9,27 @@
 
 namespace Platform::Hashing
 {
-
-
     template <typename T, typename = std::void_t<>>
-    struct is_std_hashable_t : std::false_type { };
+    struct is_std_hashable : std::false_type { };
 
     template <typename T>
-    struct is_std_hashable_t<T, std::void_t<decltype(std::declval<std::hash<T>>()(std::declval<T>()))>> : std::true_type { };
-
-#ifndef __cpp_lib_concepts
-    template <typename T>
-    inline constexpr bool is_std_hashable = is_std_hashable_t<T>::value;
+    struct is_std_hashable<T, std::void_t<decltype(std::declval<std::hash<T>>()(std::declval<T>()))>> : std::true_type { };
 
     template <typename T>
-    inline constexpr bool not_std_hashable = !is_std_hashable_t<T>::value;
-#else
+    inline constexpr bool is_std_hashable_v = is_std_hashable<T>::value;
 
     template <typename T>
-    concept is_std_hashable = requires(T object) {std::hash<T>{}(object);};
+    inline constexpr bool not_std_hashable_v = !is_std_hashable<T>::value;
+
+#if __cpp_lib_concepts
+    template <typename T>
+    concept std_hashable = requires(T object) {std::hash<T>{}(object);};
 
     template <typename T>
-    concept not_std_hashable = !is_std_hashable<T>;
+    concept not_std_hashable = !std_hashable<T>;
 #endif
 
-    template<typename T> std::size_t RawHash(const T &value)
+    template<typename T> std::size_t HashRaw(const T &value)
     {
         std::uint32_t hash = 0;
         Combine(hash, value);
@@ -41,14 +38,24 @@ namespace Platform::Hashing
 
     template<typename T> std::size_t Hash(const T &value)
     {
-        if constexpr (is_std_hashable<std::decay_t<T>>)
+        // Как вам такая идея? Это позволит перегрузить const char*, не затронув char*
+        // Также, если будет перегружен std::hash<T>, то std::hash<const T> тоже будет работать (и наоборот)
+        if constexpr (is_std_hashable_v<T>)
         {
-            std::hash<typename std::decay<T>::type> hasher;
+            std::hash<T> hasher;
             return hasher(value);
         }
         else
         {
-            return RawHash(value);
+            if constexpr (is_std_hashable_v<std::decay_t<T>>)
+            {
+                std::hash<std::decay_t<T>> hasher;
+                return hasher(value);
+            }
+            else
+            {
+                return HashRaw(value);
+            }
         }
     }
 
