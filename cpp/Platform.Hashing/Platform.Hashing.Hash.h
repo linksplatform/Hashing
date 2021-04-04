@@ -17,13 +17,20 @@ namespace Platform::Hashing
 
     template <typename T>
     inline constexpr bool is_std_hashable = is_std_hashable_struct<T>::value;
+
+    template <typename T>
+    inline constexpr bool not_std_hashable = !is_std_hashable_struct<T>::value;
 #else
     template <typename T>
     concept is_std_hashable = requires(T object) {std::hash<T>{}(object);};
+
+    template <typename T>
+    concept not_std_hashable = !is_std_hashable<T>;
 #endif
 
 
-    template<typename T> std::size_t Hash(const T& value)
+
+    template<typename T> std::size_t Hash(T &&value)
     {
         if constexpr (is_std_hashable<typename std::decay<T>::type>)
         {
@@ -38,7 +45,15 @@ namespace Platform::Hashing
         }
     }
 
-    template<typename ... Args> std::size_t Hash(const Args&... args)
+    // Analogue of Hash without trying to call std :: hash
+    template<typename T> std::size_t TrivialHash(T &&value)
+    {
+        std::uint32_t hash = 0;
+        Combine(hash, value);
+        return Expand(hash);
+    }
+
+    template<typename ... Args> std::size_t Hash(Args&&... args)
     {
         std::hash<std::tuple<Args...>> hasher;
         return hasher(std::tie(args...));
