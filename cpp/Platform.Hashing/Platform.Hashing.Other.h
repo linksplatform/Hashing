@@ -40,11 +40,10 @@ namespace std
         {
             using ItemType = decltype(*object.begin());
 
-            std::size_t hash = typeid(T).hash_code();
+            std::size_t hash = 0;
             for(auto element : object)
             {
-                // https://stackoverflow.com/a/2595226
-                hash ^= Platform::Hashing::Hash(element) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+                Platform::Hashing::CombineHash(hash, std::hash<T>{}(object));
             }
             return Platform::Hashing::Expand(hash);
         }
