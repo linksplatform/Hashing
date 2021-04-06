@@ -53,6 +53,10 @@ namespace std
         }
     };
 
+#else
+    /// ...
+#endif
+
     template<typename T>
     struct hash<T&>
     {
@@ -61,10 +65,6 @@ namespace std
             return std::hash<T*>{}((T*)&object);
         }
     };
-#else
-    /// ...
-#endif
-
 }
 
 #endif //PLATFORM_HASHING_PLATFORM_HASHING_OTHER_H
