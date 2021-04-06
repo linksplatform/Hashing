@@ -14,6 +14,7 @@ namespace std
     {
         size_t operator()(const any &object) const noexcept
         {
+            // FIXME
             throw std::logic_error("the hash from std::any is too insecure");
         }
     };
