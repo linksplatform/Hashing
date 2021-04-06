@@ -7,6 +7,18 @@
 
 #include <any>
 
+
+// FIXME use the concept from Platform::System
+namespace Platform::Hashing
+{
+    template<typename _Type>
+    concept IEnumerable = requires(_Type object)
+    {
+        {object.begin()} -> std::forward_iterator;
+        {object.end()} -> std::forward_iterator;
+    };
+}
+
 namespace std
 {
     template<>
@@ -20,15 +32,8 @@ namespace std
     };
 
 #ifdef __cpp_lib_concepts
-    // FIXME use the concept from Platform::System
-    template<typename _Type>
-    concept IEnumerable = requires(_Type object)
-    {
-        {object.begin()} -> std::forward_iterator;
-        {object.end()} -> std::forward_iterator;
-    };
 
-    template<Platform::Hashing::not_std_hashable T> requires IEnumerable<T>
+    template<Platform::Hashing::not_std_hashable T> requires Platform::Hashing::IEnumerable<T>
     struct hash<T>
     {
         size_t operator()(const T &object) const
