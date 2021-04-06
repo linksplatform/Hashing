@@ -4,6 +4,7 @@
 #define PLATFORM_HASHING_HASH
 
 #include <functional>
+#include <cstring>
 
 #include "Platform.Hashing.Expand.h"
 
@@ -19,7 +20,7 @@ namespace Platform::Hashing
     inline constexpr bool is_std_hashable_v = is_std_hashable<T>::value;
 
     template <typename T>
-    inline constexpr bool not_std_hashable_v = !is_std_hashable<T>::value;
+    inline constexpr bool not_std_hashable_v = !is_std_hashable<T>::value; // TODO seems useless                                                     (goddess)
 
 #if __cpp_lib_concepts
     template <typename T>
@@ -29,32 +30,23 @@ namespace Platform::Hashing
     concept not_std_hashable = !std_hashable<T>;
 #endif
 
-    template<typename T> std::size_t HashRaw(const T &value)
+    template<typename T> std::size_t HashRaw(const T &value, std::size_t size = 1)
     {
-        std::uint32_t hash = 0;
-        Combine(hash, value);
+        std::uint32_t hash = typeid(T).hash_code();
+        Combine(hash, &value, size);
         return Expand(hash);
     }
 
     template<typename T> std::size_t Hash(const T &value)
     {
-        // Просто слегка подправит работу с const char*
-        if constexpr (is_std_hashable_v<T>)
+        if constexpr (is_std_hashable_v<std::decay_t<T>>)
         {
-            std::hash<T> hasher;
+            std::hash<std::decay_t<T>> hasher;
             return hasher(value);
         }
         else
         {
-            if constexpr (is_std_hashable_v<std::decay_t<T>>)
-            {
-                std::hash<std::decay_t<T>> hasher;
-                return hasher(value);
-            }
-            else
-            {
-                return HashRaw(value);
-            }
+            return HashRaw(value);
         }
     }
 
