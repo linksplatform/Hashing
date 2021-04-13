@@ -71,7 +71,7 @@ namespace PlatformHashingTemplateLibraryTests
 
             std::size_t hash1 = Hash(a);
             std::size_t hash2 = Hash(b);
-            ASSERT_NE(hash1, hash2);
+            EXPECT_NE(hash1, hash2);
         }
         {
             auto a = std::map<int, int>{{1, 1}, {2, 2}, {3, 3}};
@@ -112,10 +112,6 @@ namespace PlatformHashingTemplateLibraryTests
             std::size_t hash1 = Hash(object1);
             std::size_t hash2 = Hash(object2);
             ASSERT_EQ(hash1, hash2);
-
-            hash1 = std::hash<DataType&>{}(object1);
-            hash2 = std::hash<DataType&>{}(object2);
-            ASSERT_NE(hash1, hash2);
         }
         {
             std::size_t hash1 = Hash(DataType{1, 1, 1, 1});
@@ -124,12 +120,3 @@ namespace PlatformHashingTemplateLibraryTests
         }
     }
 }
-
-// If IDE not supported Google Test
-/*
-    int main()
-    {
-        ::testing::InitGoogleTest();
-        RUN_ALL_TESTS();
-    };
-*/
