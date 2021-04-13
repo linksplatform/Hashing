@@ -23,7 +23,7 @@ namespace Platform::Hashing
 namespace Platform::Hashing
 {
     template<class T>
-    inline auto to_any_hash_visitor(auto func)
+    inline auto __to_any_hash_visitor(auto func)
     {
         return std::pair<const std::type_index, std::function<std::size_t(std::any)>>
         {
@@ -38,7 +38,7 @@ namespace Platform::Hashing
         };
     }
 
-    #define BASE_VISITOR_REGISTER(Type) to_any_hash_visitor<Type>([](Type a) {return Hash(a);})
+    #define BASE_VISITOR_REGISTER(Type) __to_any_hash_visitor<Type>([](Type a) {return Hash(a);})
     static std::unordered_map<std::type_index, std::function<std::size_t(std::any)>>
             any_hash_visitor {
             BASE_VISITOR_REGISTER(short int),
@@ -57,7 +57,7 @@ namespace Platform::Hashing
     template<class T>
     inline void register_any_hash_visitor(auto func)
     {
-        any_hash_visitor.insert(to_any_hash_visitor<T>(func));
+        any_hash_visitor.insert(__to_any_hash_visitor<T>(func));
     }
 }
 
