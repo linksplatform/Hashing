@@ -39,6 +39,7 @@ namespace Platform::Hashing
     }
 
     #define BASE_VISITOR_REGISTER(Type) __to_any_hash_visitor<Type>([](Type a) {return Hash(a);})
+    #define VISITOR_REGISTER(Type, Func) __to_any_hash_visitor<Type>([](Type a) {return Hash(a);})
     static std::unordered_map<std::type_index, std::function<std::size_t(std::any)>>
             any_hash_visitor {
             BASE_VISITOR_REGISTER(short int),
@@ -51,8 +52,13 @@ namespace Platform::Hashing
             BASE_VISITOR_REGISTER(float),
             BASE_VISITOR_REGISTER(double),
             BASE_VISITOR_REGISTER(long double),
+
+            VISITOR_REGISTER(const char*, Hash(std::string(a))),
+
+            BASE_VISITOR_REGISTER(const std::string&),
     };
     #undef BASE_VISITOR_REGISTER
+    #undef VISITOR_REGISTER
 
     template<class T>
     inline void register_any_hash_visitor(auto func)
