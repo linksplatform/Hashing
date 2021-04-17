@@ -1,8 +1,5 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.8)
 project(Platform.Hashing)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 include_directories(../Platform.Hashing)
 
@@ -22,5 +19,7 @@ endif()
 
 
 add_executable(Platform.Hashing.Tests Platform.Hashing.TemplateLibrary.Tests.cpp)
+
+target_compile_features(Platform.Hashing.Tests PUBLIC cxx_std_20)
 
 target_link_libraries(Platform.Hashing.Tests gtest gtest_main)
