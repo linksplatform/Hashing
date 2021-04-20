@@ -13,7 +13,7 @@ namespace Platform::Hashing
     namespace Internal
     {
         template<class T>
-        inline auto ToAnyHashVisitor(auto func)
+        inline auto ToAnyHashVisitor(auto&& func)
         {
             return std::pair<const std::type_index, std::function<std::size_t(std::any)>>
                 {
@@ -125,6 +125,11 @@ namespace std
             std::uint32_t hash = 0;
             std::size_t size = 0;
             std::vector<TItem> data;
+
+            if constexpr (requires() { std::ranges::size(collection); })
+            {
+                data.reserve(std::ranges::size(collection));
+            }
 
             for (const auto& it : collection)
             {
