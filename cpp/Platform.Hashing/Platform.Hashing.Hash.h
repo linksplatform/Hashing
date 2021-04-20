@@ -41,8 +41,16 @@ namespace Platform::Hashing
     {
         if constexpr (is_std_hashable_v<std::decay_t<T>>)
         {
-            std::hash<std::decay_t<T>> hasher;
-            return hasher(value);
+            if constexpr (std::is_array_v<T>)
+            {
+                std::hash<T> hasher;
+                return hasher(value);
+            }
+            else
+            {
+                std::hash<std::decay_t<T>> hasher;
+                return hasher(value);
+            }
         }
         else
         {

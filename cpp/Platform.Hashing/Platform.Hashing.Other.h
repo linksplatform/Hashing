@@ -10,7 +10,6 @@
 
 namespace Platform::Hashing
 {
-
     namespace Internal
     {
         template<class T>
@@ -75,72 +74,64 @@ namespace std
     };
 
     // TODO appreciate the idiom
-    template<typename _Type>
-    concept IHashableCollection =
-    std::ranges::range<_Type> ||
-    requires(_Type object) {object.data(); object.size();}
-    ||
-    (requires(_Type object){object.size();} && std::ranges::range<_Type>);
 
     template<Platform::Hashing::not_std_hashable T>
-    requires IHashableCollection<T>
+    requires
+        requires(T collection)
+        {
+            std::ranges::data(collection);
+            std::ranges::size(collection);
+        }
     struct hash<T>
     {
         size_t operator()(const T& collection) const
         {
-            std::size_t hash = 0;
+            using TItem = std::ranges::range_value_t<T>;
+            std::uint32_t hash = 0;
 
-            if constexpr (requires(T object) {object.data(); object.size();})
+            if constexpr (is_fundamental_v<TItem>)
             {
-                using TItem = decltype(*collection.data());
-                if constexpr (is_fundamental_v<TItem>)
+                Platform::Hashing::Combine(hash, std::ranges::data(collection), std::ranges::size(collection));
+                return Platform::Hashing::Expand(hash);
+            }
+            else
+            {
+                auto data = std::ranges::data(collection);
+                const auto size = std::ranges::size(collection);
+                for (int i = 0; i < size; i++)
                 {
-                    Platform::Hashing::Combine(hash, collection.data(), collection.size());
-                    return Platform::Hashing::Expand(hash);
+                    hash = Platform::Hashing::CombineHash(hash, Platform::Hashing::Hash(*data));
+                    ++data;
                 }
-                else
-                {
-                    auto data = collection.data();
-                    for (int i = 0; i < collection.size(); i++)
-                    {
-                        hash = Platform::Hashing::CombineHash(hash, Platform::Hashing::Hash(data[i]));
-                    }
-                    return Platform::Hashing::Expand(hash);
-                }
+                return Platform::Hashing::Expand(hash);
+            }
+        }
+    };
+
+    template<Platform::Hashing::not_std_hashable T>
+    requires
+        (!requires(T collection)
+        {
+            std::ranges::data(collection);
+            std::ranges::size(collection);
+        })
+        &&
+        std::ranges::range<T>
+    struct hash<T>
+    {
+        size_t operator()(const T& collection) const
+        {
+            using TItem = std::ranges::range_value_t<T>;
+            std::uint32_t hash = 0;
+            std::size_t size = 0;
+            std::vector<TItem> data;
+
+            for (const auto& it : collection)
+            {
+                data.push_back(it);
             }
 
-            if constexpr(requires(T object) {object.size();} && std::ranges::range<T>)
-            {
-                using TItem = decltype(*collection.begin());
-
-                if constexpr (is_fundamental_v<TItem>)
-                {
-                    auto* data = new TItem[collection.size()];
-                    for (auto it : collection)
-                    {
-                        *data = it;
-                        data++;
-                    }
-                    Platform::Hashing::Combine(hash, data - collection.size(), collection.size());
-                    return Platform::Hashing::Expand(hash);
-                }
-            }
-
-            if constexpr (std::ranges::range<T>)
-            {
-                using TItem = decltype(*collection.begin());
-                if constexpr (is_fundamental_v<TItem>)
-                {
-                    auto* data = new TItem[collection.size()];
-                    for (auto it : collection)
-                    {
-                        *data = it;
-                        data++;
-                    }
-                    Platform::Hashing::Combine(hash, data - collection.size(), collection.size());
-                    return Platform::Hashing::Expand(hash);
-                }
-            }
+            return Platform::Hashing::Hash(data);
         }
     };
 }
