@@ -7,6 +7,8 @@
 
 #include <tuple>
 
+#include "Platform.Hashing.Hash.h"
+
 namespace Platform::Hashing
 {
     template <class TupleType, size_t Index = std::tuple_size<TupleType>::value - 1>

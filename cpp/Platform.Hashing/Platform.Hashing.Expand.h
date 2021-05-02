@@ -5,6 +5,8 @@
 
 // Based on https://security.stackexchange.com/a/209892
 
+#include "Platform.Hashing.Combine.h"
+
 namespace Platform::Hashing
 {
     std::size_t Expand(std::uint32_t originalHash)
