@@ -16,13 +16,14 @@ namespace std
     {
         size_t operator()(const T& collection) const
         {
+            using namespace Platform::Hashing;
             using TItem = std::ranges::range_value_t<T>;
             std::uint32_t hash = 0;
 
             if constexpr (is_fundamental_v<TItem>)
             {
-                Platform::Hashing::Combine(hash, std::ranges::data(collection), std::ranges::size(collection));
-                return Platform::Hashing::Expand(hash);
+                Combine(hash, std::ranges::data(collection), std::ranges::size(collection));
+                return Expand(hash);
             }
             else
             {
@@ -30,10 +31,10 @@ namespace std
                 const auto size = std::ranges::size(collection);
                 for (int i = 0; i < size; i++)
                 {
-                    hash = Platform::Hashing::CombineHash(hash, Platform::Hashing::Hash(*data));
+                    hash = CombineHash(hash, Hash(*data));
                     ++data;
                 }
-                return Platform::Hashing::Expand(hash);
+                return Expand(hash);
             }
         }
     };

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef PLATFORM_HASHING_OTHER_H
-#define PLATFORM_HASHING_OTHER_H
+#ifndef PLATFORM_HASHING_ANY
+#define PLATFORM_HASHING_ANY
 
 #include "Platform.Hashing.Hash.h"
 
@@ -14,7 +14,7 @@ namespace Platform::Hashing
     namespace Internal
     {
         template<class T>
-        inline auto ToAnyHashVisitor(auto&& func)
+        inline auto ToAnyHasher(auto&& func)
         {
             return std::pair<const std::type_index, std::function<std::size_t(std::any)>>
                 {
@@ -29,30 +29,30 @@ namespace Platform::Hashing
                 };
         }
 
-        #define HASH_VISITOR(Type) ToAnyHashVisitor<Type>(Hash<Type>)
+        #define HASHER(Type) ToAnyHasher<Type>(Hash<Type>)
         static std::unordered_map<std::type_index, std::function<std::size_t(std::any)>>
-            AnyHashVisitors
+            AnyHashers
             {
-                HASH_VISITOR(short int),
-                HASH_VISITOR(unsigned short int),
-                HASH_VISITOR(int),
-                HASH_VISITOR(unsigned int),
-                HASH_VISITOR(unsigned long int),
-                HASH_VISITOR(long long int),
-                HASH_VISITOR(unsigned long long int),
-                HASH_VISITOR(float),
-                HASH_VISITOR(double),
-                HASH_VISITOR(long double),
-                HASH_VISITOR(const char*),
-                HASH_VISITOR(const std::string&),
+                HASHER(short int),
+                HASHER(unsigned short int),
+                HASHER(int),
+                HASHER(unsigned int),
+                HASHER(unsigned long int),
+                HASHER(long long int),
+                HASHER(unsigned long long int),
+                HASHER(float),
+                HASHER(double),
+                HASHER(long double),
+                HASHER(const char*),
+                HASHER(const std::string&),
             };
-        #undef HASH_VISITOR
+        #undef HASHER
 
     }
     template<class T>
-    inline void RegisterAnyHashVisitor(auto&& func)
+    inline void RegisterAnyHasher(auto&& func)
     {
-        Internal::AnyHashVisitors.insert(Internal::ToAnyHashVisitor<T>(std::forward<decltype(func)>(func)));
+        Internal::AnyHashers.insert(Internal::ToAnyHasher<T>(std::forward<decltype(func)>(func)));
     }
 }
 
@@ -63,16 +63,18 @@ namespace std
     {
         size_t operator()(const any& object) const
         {
-            if (!Platform::Hashing::Internal::AnyHashVisitors.contains(object.type()))
+            if (!Platform::Hashing::Internal::AnyHashers.contains(object.type()))
+            {
                 // TODO later replace to std::forward
                 throw std::runtime_error(std::string("Hash function for type ")
-                                                .append(object.type().name())
-                                                .append(" is unregistered"));
+                                             .append(object.type().name())
+                                             .append(" is unregistered"));
+            }
 
-            auto hasher = Platform::Hashing::Internal::AnyHashVisitors[object.type()];
+            auto hasher = Platform::Hashing::Internal::AnyHashers[object.type()];
             return hasher(object);
         }
     };
 }
 
-#endif //PLATFORM_HASHING_PLATFORM_HASHING_OTHER_H
+#endif //PLATFORM_HASHING_PLATFORM_HASHING_ANY
