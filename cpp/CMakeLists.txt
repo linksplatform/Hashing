@@ -18,6 +18,7 @@ endif()
 
 add_subdirectory(${CMAKE_LOCAL_PROJECT_NAME})
 target_include_directories(${CMAKE_LOCAL_PROJECT_NAME}.Library INTERFACE ${crc32_SOURCE_DIR})
+add_compile_options(-msse4.2)
 
 get_directory_property(IS_SUBPROJECT PARENT_DIRECTORY)
 
