@@ -7,6 +7,7 @@
 #include "Platform.Hashing.Expand.h"
 #include "Platform.Hashing.Hash.h"
 #include "Platform.Hashing.Tuple.h"
-#include "Platform.Hashing.Other.h"
+#include "Platform.Hashing.Any.h"
+#include "Platform.Hashing.Range.h"
 
 #endif

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(Platform.Hashing)
+project(${CMAKE_LOCAL_PROJECT_NAME})
 
 include_directories(../Platform.Hashing)
 
@@ -18,8 +18,7 @@ if(NOT googletest_POPULATED)
 endif()
 
 
-add_executable(Platform.Hashing.Tests Platform.Hashing.TemplateLibrary.Tests.cpp)
-
-target_compile_features(Platform.Hashing.Tests PUBLIC cxx_std_20)
-
-target_link_libraries(Platform.Hashing.Tests gtest gtest_main)
+add_executable(${CMAKE_LOCAL_PROJECT_NAME}.Tests Platform.Hashing.TemplateLibrary.Tests.cpp)
+target_compile_features(${CMAKE_LOCAL_PROJECT_NAME}.Tests PUBLIC cxx_std_20)
+target_link_libraries(${CMAKE_LOCAL_PROJECT_NAME}.Tests PUBLIC gtest gtest_main)
+message(${CMAKE_LOCAL_PROJECT_NAME})
