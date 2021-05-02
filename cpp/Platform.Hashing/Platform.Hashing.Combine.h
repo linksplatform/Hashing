@@ -3,7 +3,9 @@
 #ifndef PLATFORM_HASHING_COMBINE
 #define PLATFORM_HASHING_COMBINE
 
-#include <crc32c.c>
+#define CRC32C_STATIC
+#include <crc32c/crc32c.h>
+#include <crc32c/crc32c.c>
 #include <cstdint>
 
 namespace Platform::Hashing
