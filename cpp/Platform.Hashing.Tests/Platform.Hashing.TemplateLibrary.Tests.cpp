@@ -19,6 +19,14 @@ namespace Platform::Hashing::Tests
         }
     }
 
+    TEST(HashingAnyTest, Basic)
+    {
+        ASSERT_EQ(Hash(std::any{1}), Hash(1));
+        std::cout << std::hash<const char*>{}("1") << std::endl;
+        ASSERT_EQ(Hash(std::any{"1"}), Hash("1"));
+        ASSERT_EQ(Hash(std::any{std::string{"1"}}), Hash(std::string{"1"}));
+    }
+
     TEST(HashingTest, Basic)
     {
         std::size_t hash1 = Hash(42);

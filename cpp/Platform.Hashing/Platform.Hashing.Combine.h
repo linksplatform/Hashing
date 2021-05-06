@@ -24,7 +24,7 @@ namespace Platform::Hashing
         hashAccumulator = crc32c_append(hashAccumulator, reinterpret_cast<const uint8_t*>(value), size * length);
     }
 
-    constexpr std::size_t CombineHash(std::size_t hash1, std::size_t hash2)
+    constexpr std::size_t CombineHashes(std::size_t hash1, std::size_t hash2)
     {
         // https://stackoverflow.com/a/2595226
         hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);

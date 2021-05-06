@@ -29,7 +29,8 @@ namespace Platform::Hashing
         {
             if constexpr (std::is_array_v<T>)
             {
-                std::hash<T> hasher;
+                using TItem = std::remove_reference_t<decltype(std::declval<T>()[0])>;
+                std::hash<const TItem*> hasher;
                 return hasher(value);
             }
             else

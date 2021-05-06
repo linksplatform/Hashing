@@ -31,7 +31,7 @@ namespace std
                 const auto size = std::ranges::size(collection);
                 for (int i = 0; i < size; i++)
                 {
-                    hash = CombineHash(hash, Hash(*data));
+                    hash = CombineHashes(hash, Hash(*data));
                     ++data;
                 }
                 return Expand(hash);
