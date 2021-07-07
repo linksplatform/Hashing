@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef PLATFORM_HASHING_EXPAND
-#define PLATFORM_HASHING_EXPAND
-
 // Based on https://security.stackexchange.com/a/209892
 
 #include "Platform.Hashing.Combine.h"
@@ -25,5 +22,3 @@ namespace Platform::Hashing
         }
     }
 }
-
-#endif

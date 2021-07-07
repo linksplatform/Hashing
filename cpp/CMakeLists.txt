@@ -1,45 +1,18 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.8)
+project(Platform.Hashing)
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
 
-set(CMAKE_LOCAL_PROJECT_NAME Platform.Hashing)
-project(${CMAKE_LOCAL_PROJECT_NAME})
+add_library(${PROJECT_NAME}.Library INTERFACE)
+target_include_directories(${PROJECT_NAME}.Library INTERFACE ${PROJECT_NAME})
+target_compile_options(${PROJECT_NAME}.Library INTERFACE -mpclmul -msse4.2)
 
-include(FetchContent)
-FetchContent_Declare(
-        crc32
-        URL https://github.com/robertvazan/crc32c-hw/archive/refs/tags/v1.2.1.zip
-)
-FetchContent_MakeAvailable(crc32)
-FetchContent_GetProperties(crc32)
-if(NOT crc32_POPULATED)
-    FetchContent_Populate(crc32)
-    add_subdirectory(${crc32_SOURCE_DIR} ${crc32_BINARY_DIR})
-endif()
+add_executable(${PROJECT_NAME}.Tests ${PROJECT_NAME}.Tests/AllTests.cpp)
+target_link_libraries(${PROJECT_NAME}.Tests PRIVATE ${PROJECT_NAME}.Library)
+target_link_libraries(${PROJECT_NAME}.Tests PRIVATE CONAN_PKG::gtest)
+set_target_properties(${PROJECT_NAME}.Tests PROPERTIES CXX_STANDARD 20)
 
-
-add_subdirectory(${CMAKE_LOCAL_PROJECT_NAME})
-target_include_directories(${CMAKE_LOCAL_PROJECT_NAME}.Library INTERFACE ${crc32_SOURCE_DIR})
-add_compile_options(-msse4.2)
-
-get_directory_property(IS_SUBPROJECT PARENT_DIRECTORY)
-
-macro(INCLUDE_EXTENSION EXTENSION_NAME)
-    add_subdirectory(${CMAKE_LOCAL_PROJECT_NAME}.${EXTENSION_NAME})
-    target_link_libraries(${CMAKE_LOCAL_PROJECT_NAME}.${EXTENSION_NAME} PUBLIC ${CMAKE_LOCAL_PROJECT_NAME}.Library)
-endmacro()
-
-function(IF_SUPPORT EXTENSION)
-    message("Importing :: ${EXTENSION}" \n)
-    set(UP_EXTENSION ${EXTENSION})
-    string(TOUPPER ${EXTENSION} UP_EXTENSION)
-    if(DEFINED LINKS_PLATFORM_${UP_EXTENSION})
-        if(${LINKS_PLATFORM_${UP_EXTENSION}})
-            INCLUDE_EXTENSION(${EXTENSION})
-        endif()
-    elseif(NOT IS_SUBPROJECT)
-        INCLUDE_EXTENSION(${EXTENSION})
-    endif()
-endfunction()
-
-
-IF_SUPPORT(Tests)
-IF_SUPPORT(Benchmarks)
+add_executable(${PROJECT_NAME}.Benchmarks ${PROJECT_NAME}.Tests/AllTests.cpp)
+target_link_libraries(${PROJECT_NAME}.Benchmarks PRIVATE ${PROJECT_NAME}.Library)
+target_link_libraries(${PROJECT_NAME}.Benchmarks PRIVATE CONAN_PKG::benchmark)
+set_target_properties(${PROJECT_NAME}.Benchmarks PROPERTIES CXX_STANDARD 20)

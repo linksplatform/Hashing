@@ -9,20 +9,29 @@ namespace Platform::Hashing::Tests
 {
     TEST(CombineTest, Trivial)
     {
-        {
-            std::uint32_t hash1 = 0;
-            Combine(hash1, 42);
-            ASSERT_NE(0U, hash1);
-            std::uint32_t hash2 = 0;
-            Combine(hash2, 42);
-            ASSERT_EQ(hash2, hash1);
-        }
+        std::uint32_t hash1 = 0;
+        Combine(hash1, 42);
+        ASSERT_NE(0U, hash1);
+        std::uint32_t hash2 = 0;
+        Combine(hash2, 42);
+        ASSERT_EQ(hash2, hash1);
+    }
+
+    TEST(HashingAnyTest, Basic)
+    {
+        ASSERT_EQ(Hash(std::any{1}), Hash(1));
+        ASSERT_EQ(Hash(std::any{"1"}), Hash("1"));
+        ASSERT_EQ(Hash(std::any{u"1"}), Hash(u"1"));
+        ASSERT_EQ(Hash(std::any{u8"1"}), Hash(u8"1"));
+        ASSERT_EQ(Hash(std::any{U"1"}), Hash(U"1"));
+        ASSERT_EQ(Hash(std::any{L"1"}), Hash(L"1"));
+        ASSERT_EQ(Hash(std::any{std::string{"1"}}), Hash(std::string{"1"}));
     }
 
     TEST(HashingTest, Basic)
     {
         std::size_t hash1 = Hash(42);
-        ASSERT_NE(static_cast<std::size_t>(0), hash1);
+        ASSERT_NE(0, hash1);
         std::size_t hash2 = Hash(42);
         ASSERT_EQ(hash2, hash1);
 

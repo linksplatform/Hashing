@@ -1,23 +1,22 @@
-#ifndef PLATFORM_HASHING_RANGE
-#define PLATFORM_HASHING_RANGE
+#pragma once
 
 #include "Platform.Hashing.Hash.h"
 
 namespace std
 {
-    template<Platform::Hashing::not_std_hashable T>
-    requires
-    requires(T collection)
+    template<Platform::Hashing::Internal::not_std_hashable Self>
+        requires
+            requires(Self collection)
+            {
+                std::ranges::data(collection);
+                std::ranges::size(collection);
+            }
+    struct hash<Self>
     {
-        std::ranges::data(collection);
-        std::ranges::size(collection);
-    }
-    struct hash<T>
-    {
-        size_t operator()(const T& collection) const
+        std::size_t operator()(const Self& collection) const
         {
             using namespace Platform::Hashing;
-            using TItem = std::ranges::range_value_t<T>;
+            using TItem = std::ranges::range_value_t<Self>;
             std::uint32_t hash = 0;
 
             if constexpr (is_fundamental_v<TItem>)
@@ -28,10 +27,10 @@ namespace std
             else
             {
                 auto data = std::ranges::data(collection);
-                const auto size = std::ranges::size(collection);
+                auto size = std::ranges::size(collection);
                 for (int i = 0; i < size; i++)
                 {
-                    hash = CombineHash(hash, Hash(*data));
+                    hash = CombineHashes(hash, Hash(*data));
                     ++data;
                 }
                 return Expand(hash);
@@ -39,25 +38,25 @@ namespace std
         }
     };
 
-    template<Platform::Hashing::not_std_hashable T>
+    template<Platform::Hashing::Internal::not_std_hashable Self>
     requires
-        (!requires(T collection)
+        (not requires(Self collection)
         {
             std::ranges::data(collection);
             std::ranges::size(collection);
         })
         &&
-        std::ranges::range<T>
-    struct hash<T>
+        std::ranges::range<Self>
+    struct hash<Self>
     {
-        size_t operator()(const T& collection) const
+        std::size_t operator()(const Self& collection) const
         {
-            using TItem = std::ranges::range_value_t<T>;
+            using TItem = std::ranges::range_value_t<Self>;
             std::uint32_t hash = 0;
             std::size_t size = 0;
             std::vector<TItem> data;
 
-            constexpr auto sizeable = requires()
+            constexpr auto sizeable = requires
             {
                 std::ranges::size(collection);
             };
@@ -67,7 +66,7 @@ namespace std
                 data.reserve(std::ranges::size(collection));
             }
 
-            for (const auto& it : collection)
+            for (auto&& it : collection)
             {
                 data.push_back(it);
             }
@@ -76,5 +75,3 @@ namespace std
         }
     };
 }
-
-#endif //PLATFORM_HASHING_RANGE
