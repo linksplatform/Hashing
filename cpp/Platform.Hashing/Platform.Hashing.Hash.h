@@ -61,7 +61,7 @@ namespace Platform::Hashing
 
         if constexpr (Internal::char_array<RawType>)
         {
-            std::hash<const char*> hasher;
+            std::hash<const std::ranges::range_value_t<Type>*> hasher;
             return hasher(value);
         }
 

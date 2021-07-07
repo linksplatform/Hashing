@@ -21,6 +21,10 @@ namespace Platform::Hashing::Tests
     {
         ASSERT_EQ(Hash(std::any{1}), Hash(1));
         ASSERT_EQ(Hash(std::any{"1"}), Hash("1"));
+        ASSERT_EQ(Hash(std::any{u"1"}), Hash(u"1"));
+        ASSERT_EQ(Hash(std::any{u8"1"}), Hash(u8"1"));
+        ASSERT_EQ(Hash(std::any{U"1"}), Hash(U"1"));
+        ASSERT_EQ(Hash(std::any{L"1"}), Hash(L"1"));
         ASSERT_EQ(Hash(std::any{std::string{"1"}}), Hash(std::string{"1"}));
     }
 

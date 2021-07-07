@@ -5,7 +5,7 @@ conan_basic_setup(TARGETS)
 
 add_library(${PROJECT_NAME}.Library INTERFACE)
 target_include_directories(${PROJECT_NAME}.Library INTERFACE ${PROJECT_NAME})
-target_compile_options(${PROJECT_NAME}.Library INTERFACE -pclmul-msse4.2)
+target_compile_options(${PROJECT_NAME}.Library INTERFACE -mpclmul -msse4.2)
 
 add_executable(${PROJECT_NAME}.Tests ${PROJECT_NAME}.Tests/AllTests.cpp)
 target_link_libraries(${PROJECT_NAME}.Tests PRIVATE ${PROJECT_NAME}.Library)
