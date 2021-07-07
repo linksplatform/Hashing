@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef PLATFORM_HASHING_ANY
-#define PLATFORM_HASHING_ANY
-
 #include "Platform.Hashing.Hash.h"
 
 #include <any>
@@ -13,24 +10,22 @@ namespace Platform::Hashing
 {
     namespace Internal
     {
-        template<class T>
-        inline auto ToAnyHasher(auto&& func)
+        template<typename T>
+        auto ToAnyHasher(auto&& func)
         {
-            return std::pair<const std::type_index, std::function<std::size_t(std::any)>>
+            return
+                std::pair<std::type_index, std::function<std::size_t(const std::any&)>>
                 {
                     std::type_index(typeid(T)),
-                    [func](std::any a) -> std::size_t
+                    [&func](const std::any& a) -> std::size_t
                     {
-                        if constexpr (std::is_void_v<T>)
-                            return func();
-                        else
-                            return func(std::any_cast<T>(a));
+                        return func(std::any_cast<T>(a));
                     }
                 };
         }
 
-        #define HASHER(Type) ToAnyHasher<Type>(Hash<Type>)
-        static std::unordered_map<std::type_index, std::function<std::size_t(std::any)>>
+        #define HASHER(Type) ToAnyHasher<Type>([](auto&& arg) { return Hash(arg); })
+        std::unordered_map<std::type_index, std::function<std::size_t(const std::any&)>>
             AnyHashers
             {
                 HASHER(short int),
@@ -44,7 +39,7 @@ namespace Platform::Hashing
                 HASHER(double),
                 HASHER(long double),
                 HASHER(const char*),
-                HASHER(const std::string&),
+                HASHER(std::string),
             };
         #undef HASHER
 
@@ -56,25 +51,18 @@ namespace Platform::Hashing
     }
 }
 
-namespace std
+template<>
+struct std::hash<std::any>
 {
-    template<>
-    struct hash<any>
+    size_t operator()(const std::any& object) const
     {
-        size_t operator()(const any& object) const
+        if (!Platform::Hashing::Internal::AnyHashers.contains(object.type()))
         {
-            if (!Platform::Hashing::Internal::AnyHashers.contains(object.type()))
-            {
-                // TODO later replace to std::forward
-                throw std::runtime_error(std::string("Hash function for type ")
-                                             .append(object.type().name())
-                                             .append(" is unregistered"));
-            }
-
-            auto hasher = Platform::Hashing::Internal::AnyHashers[object.type()];
-            return hasher(object);
+            // TODO later replace to std::format
+            throw std::runtime_error(std::string("Hash function for type ").append(object.type().name()).append(" is unregistered"));
         }
-    };
-}
 
-#endif //PLATFORM_HASHING_PLATFORM_HASHING_ANY
+        auto hasher = Platform::Hashing::Internal::AnyHashers[object.type()];
+        return hasher(object);
+    }
+};
