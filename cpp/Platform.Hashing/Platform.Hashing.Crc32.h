@@ -1,3 +1,5 @@
+// Based on https://github.com/komrad36/CRC/blob/master/CRC/golden_intel.cpp and https://github.com/komrad36/CRC/blob/master/CRC/golden_amd.cpp licensed under https://github.com/komrad36/CRC/blob/master/LICENSE (MIT License) by Kareem Omar
+
 #pragma once
 
 #include <cstdint>
