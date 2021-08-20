@@ -12,7 +12,7 @@ Use Platform.Hashing.h file to include the whole library.
 </description>
     <releaseNotes>
 - arm support
-- bug fixes [more type visitors]
+- support for more types
 </releaseNotes>
     <version>0.2.0</version>
     <authors>Konstantin Diachenko</authors>
