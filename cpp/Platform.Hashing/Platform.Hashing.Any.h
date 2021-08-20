@@ -25,8 +25,6 @@ namespace Platform::Hashing
                 };
         }
 
-        static_assert(std::same_as<signed int, int>);
-
         #define HASHER(Type) ToAnyHasher<Type>([](auto&& arg) { return Hash(arg); })
         std::unordered_map<std::type_index, std::function<std::size_t(const std::any&)>>
             AnyHashers
