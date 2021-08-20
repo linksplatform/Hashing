@@ -7,7 +7,7 @@
 
 #ifdef __aarch64__
 #include <arm_acle.h>
-#include "../sse2neon/sse2neon.h"
+#include "sse2neon/sse2neon.h"
 #else
 #include <immintrin.h>
 #endif
