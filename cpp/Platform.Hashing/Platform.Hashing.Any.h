@@ -90,12 +90,9 @@ struct std::hash<std::any>
     {
         if (!Platform::Hashing::Internal::AnyHashers.contains(object.type()))
         {
-            // TODO later replace to std::format
             throw std::runtime_error(std::string("Hash function for type ").append(object.type().name()).append(" is unregistered"));
         }
 
-        //                                           ^
-        // TODO: use unordered_map::at()'s exception |
         auto hasher = Platform::Hashing::Internal::AnyHashers[object.type()];
         return hasher(object);
     }

@@ -35,6 +35,6 @@ Use Platform.Hashing.h file to include the whole library.
     <file src="Platform.Hashing.Expand.h" target="lib\native\include\Platform.Hashing.Expand.h" />
     <file src="Platform.Hashing.Hash.h" target="lib\native\include\Platform.Hashing.Hash.h" />
     <file src="Platform.Hashing.Tuple.h" target="lib\native\include\Platform.Hashing.Tuple.h" />
-    <file src="sse2neon/sse2neon.h" target="lib\native\include\sse2neon/sse2neon.h" />
+    <file src="sse2neon/sse2neon.h" target="lib\native\include\sse2neon\sse2neon.h" />
   </files>
 </package>
