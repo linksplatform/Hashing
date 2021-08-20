@@ -4,9 +4,13 @@
     <id>Platform.Hashing.TemplateLibrary</id>
     <title>LinksPlatform's Platform.Hashing Template Library</title>
     <summary>LinksPlatform's Platform.Hashing is a Template Library what contains abstract class templates.</summary>
-    <description>LinksPlatform's Platform.Hashing is a Template Library what contains set of C++ abstract class templates. Use Platform.Hashing.h file to include the library.</description>
-    <releaseNotes>New version</releaseNotes>
-    <version>0.1.0</version>
+    <description>LinksPlatform's Platform.Hashing is a Template Library adds more hashing features.
+Also, with Platform.Hashing, it adds the ability for more types to be keys to std::unordered_map</description>
+    <releaseNotes>
+- arm support
+- bug fixes [more type visitors]
+</releaseNotes>
+    <version>0.1.1</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
