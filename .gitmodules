@@ -1,0 +1,3 @@
+[submodule "cpp/sse2neon"]
+	path = cpp/sse2neon
+	url = https://github.com/DLTcollab/sse2neon
