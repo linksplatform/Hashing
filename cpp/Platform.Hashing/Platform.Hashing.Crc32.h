@@ -1,8 +1,16 @@
+// Based on https://github.com/komrad36/CRC/blob/master/CRC/golden_intel.cpp and https://github.com/komrad36/CRC/blob/master/CRC/golden_amd.cpp licensed under https://github.com/komrad36/CRC/blob/master/LICENSE (MIT License) by Kareem Omar
+
 #pragma once
 
 #include <cstdint>
 #include <cstdio>
+
+#ifdef __aarch64__
+#include <arm_acle.h>
+#include "sse2neon/sse2neon.h"
+#else
 #include <immintrin.h>
+#endif
 
 namespace Platform::Hashing::Internal
 {
