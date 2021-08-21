@@ -87,6 +87,7 @@ jobs:
           conan install .. -pr=linksplatform --build=missing
           cmake .. -G "Visual Studio 16" $cmake_flags
           msbuild Platform.Hashing.sln
+          msbuild ALL_BUILD.vcxproj
           ls
           cd x64
           ls
