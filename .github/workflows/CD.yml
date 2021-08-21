@@ -88,11 +88,8 @@ jobs:
           conan install .. -if=. -pr=linksplatform --build=missing
           cmake .. -G "NMake Makefiles" $cmake_flags
           make -j 2
-          binaries=bin/*
-          for binary in $binaries
-          do
-             ./$binary
-          done
+          cd bin
+          Get-ChildItem -Directory | ForEach-Object { .\"$($_.Name)" }
 
 
   deploy:
