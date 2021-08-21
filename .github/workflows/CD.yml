@@ -82,7 +82,7 @@ jobs:
           conan create platform.equality/all platform.equality/0.0.1@ -pr=linksplatform
       - name: Test C++
         run: |
-          cmake_flags="-DCMAKE_BUILD_TYPE=Release -DLINKS_PLATFORM_TESTS=TRUE"
+          $cmake_flags="-DCMAKE_BUILD_TYPE=Release -DLINKS_PLATFORM_TESTS=TRUE"
           export REPOSITORY_NAME=$(basename ${{ github.repository }})
           cd cpp && mkdir $REPOSITORY_NAME && cd $REPOSITORY_NAME
           conan install .. -if=. -pr=linksplatform --build=missing
