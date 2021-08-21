@@ -26,7 +26,7 @@ jobs:
         run: |
           conan profile new linksplatform --detect
           conan profile update settings.compiler=clang linksplatform
-          conan profile update settings.compiler.version=12 linksplatform
+          conan profile update settings.compiler.version=11 linksplatform
           conan profile update settings.compiler.libcxx=libstdc++11 linksplatform
           conan profile update env.CC=clang linksplatform
           conan profile update env.CXX=clang++ linksplatform
@@ -70,7 +70,6 @@ jobs:
           conan profile new linksplatform --detect
           conan profile update settings.compiler=Visual Studio linksplatform
           conan profile update settings.compiler.version=16 linksplatform
-          conan profile update settings.compiler.libcxx=libstdc++11 linksplatform
           conan profile show linksplatform
       - name: Conan install packages
         run: |
@@ -97,7 +96,7 @@ jobs:
 
 
   deploy:
-    needs: [testCpp]
+    needs: [testCpp, testCppOnWindows]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
