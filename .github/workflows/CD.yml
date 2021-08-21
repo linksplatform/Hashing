@@ -85,12 +85,8 @@ jobs:
           $cmake_flags="-DCMAKE_BUILD_TYPE=Release -DLINKS_PLATFORM_TESTS=TRUE"
           cd cpp && mkdir build_subfolder && cd build_subfolder
           conan install .. -pr=linksplatform --build=missing
-          cmake .. -G "Visual Studio 16" $cmake_flags
-          msbuild Platform.Hashing.sln
-          ls
-          cd x64
-          ls
-          cd Debug
+          cmake .. -G "NMake Makefiles" $cmake_flags
+          nmake
           ls
           Get-ChildItem -Directory | ForEach-Object { .\"$($_.Name)" }
 
