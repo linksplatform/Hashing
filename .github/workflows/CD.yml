@@ -86,7 +86,7 @@ jobs:
           cd cpp && mkdir build_subfolder && cd build_subfolder
           conan install .. -pr=linksplatform --build=missing
           cmake .. -G "NMake Makefiles" $cmake_flags
-          nmake -j 2
+          nmake
           cd bin
           Get-ChildItem -Directory | ForEach-Object { .\"$($_.Name)" }
 
