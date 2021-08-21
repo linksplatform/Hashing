@@ -86,7 +86,7 @@ jobs:
           cd cpp && mkdir build_subfolder && cd build_subfolder
           conan install .. -pr=linksplatform --build=missing
           cmake .. -G "Visual Studio 16" $cmake_flags
-          make -j 2
+          msbuild Platform.Hashing.sln
           ls
           cd bin
           Get-ChildItem -Directory | ForEach-Object { .\"$($_.Name)" }
