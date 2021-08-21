@@ -88,7 +88,8 @@ jobs:
           cmake .. -G "Visual Studio 16" $cmake_flags
           msbuild Platform.Hashing.sln
           ls
-          cd bin
+          cd x64
+          ls
           Get-ChildItem -Directory | ForEach-Object { .\"$($_.Name)" }
 
 
