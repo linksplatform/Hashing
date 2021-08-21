@@ -93,6 +93,7 @@ jobs:
           cd Debug
           ls
           cd ZERO_CHECK
+          ls
           Get-ChildItem -Directory | ForEach-Object { .\"$($_.Name)" }
 
 
