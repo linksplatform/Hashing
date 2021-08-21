@@ -90,6 +90,8 @@ jobs:
           ls
           cd x64
           ls
+          cd Debug
+          ls
           Get-ChildItem -Directory | ForEach-Object { .\"$($_.Name)" }
 
 
