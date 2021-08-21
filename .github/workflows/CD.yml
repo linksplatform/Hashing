@@ -83,8 +83,7 @@ jobs:
       - name: Test C++
         run: |
           $cmake_flags="-DCMAKE_BUILD_TYPE=Release -DLINKS_PLATFORM_TESTS=TRUE"
-          export REPOSITORY_NAME=$(basename ${{ github.repository }})
-          cd cpp && mkdir $REPOSITORY_NAME && cd $REPOSITORY_NAME
+          cd cpp && mkdir build_subfolder && cd build_subfolder
           conan install .. -if=. -pr=linksplatform --build=missing
           cmake .. -G "NMake Makefiles" $cmake_flags
           make -j 2
