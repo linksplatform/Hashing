@@ -25,16 +25,4 @@ Use Platform.Hashing.h file to include the whole library.
     <license type="expression">LGPL-3.0-only</license>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
   </metadata>
-  <files>
-    <file src="icon.png" target="images/icon.png" />
-    <file src="Platform.Hashing.TemplateLibrary.targets" target="build\native\Platform.Hashing.TemplateLibrary.targets" />
-    <file src="Platform.Hashing.h" target="lib\native\include\Platform.Hashing.h" />
-    <file src="Platform.Hashing.Any.h" target="lib\native\include\Platform.Hashing.Any.h" />
-    <file src="Platform.Hashing.Combine.h" target="lib\native\include\Platform.Hashing.Combine.h" />
-    <file src="Platform.Hashing.Crc32.h" target="lib\native\include\Platform.Hashing.Crc32.h" />
-    <file src="Platform.Hashing.Expand.h" target="lib\native\include\Platform.Hashing.Expand.h" />
-    <file src="Platform.Hashing.Hash.h" target="lib\native\include\Platform.Hashing.Hash.h" />
-    <file src="Platform.Hashing.Tuple.h" target="lib\native\include\Platform.Hashing.Tuple.h" />
-    <file src="sse2neon\sse2neon.h" target="lib\native\include\sse2neon\sse2neon.h" />
-  </files>
 </package>
