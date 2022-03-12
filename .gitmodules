@@ -1,3 +1,0 @@
-[submodule "cpp/Platform.Hashing/sse2neon"]
-	path = cpp/Platform.Hashing/sse2neon
-	url = https://github.com/DLTcollab/sse2neon
