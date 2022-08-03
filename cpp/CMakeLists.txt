@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 project(Platform.Hashing)
 
+
+set(CONAN_DISABLE_CHECK_COMPILER true)
+set(LINKS_PLATFORM_TESTS on)
+
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
+
 
 add_library(${PROJECT_NAME}.Library INTERFACE)
 target_include_directories(${PROJECT_NAME}.Library INTERFACE ${PROJECT_NAME})

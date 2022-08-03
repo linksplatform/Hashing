@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+ColumnLimit: 100 # or 100, but konard want 200
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+IndentWidth: 4 # or 4, compare pls
+
+PointerAlignment: Left
+ReferenceAlignment: Left
