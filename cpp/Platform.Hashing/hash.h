@@ -11,37 +11,41 @@ namespace Platform::Hashing {
 template <typename T>
 struct CrcHash {};
 
-template <typename T, typename Hasher>
+template <TTA Hasher = CrcHash, typename T>
+constexpr auto hash(const T& val) noexcept(noexport::noexcept_with<Hasher, T>)
+    -> uint64_t {
+    return Hasher<T>{}(val);
+}
+
+template <TTA Hasher, std::size_t... Idx>
+constexpr auto combine_tuple(const auto& tp, std::index_sequence<Idx...> /*unused*/) noexcept(
+    false /* wrapper must guarantee noexcept (see `hash`) */) -> uint64_t {
+    uint64_t accum = 0;
+    ((combine_to(accum, hash<Hasher>(std::get<Idx>(tp)))), ...);
+    return accum;
+}
+
+template <TTA Hasher = CrcHash, typename... Args>
+constexpr auto hash(const Args&... args) noexcept(noexport::noexcept_with<Hasher, Args...>)
+    -> uint64_t {
+    return combine_tuple<Hasher>(std::tie(args...), std::make_index_sequence<sizeof...(args)>{});
+}
+
+template <typename T, TTA Hasher>
 struct hash_span_fn {
     template <size_t N>
     // `std::span<const T>` is very stupid
-    auto operator()(std::span</*const */ T, N> span) const -> uint64_t {
+    constexpr auto operator()(std::span</*const */ T, N> span) const
+        noexcept(noexport::noexcept_with<Hasher, T>) -> uint64_t {
         uint64_t accum = 0;
         for (auto&& piece : span) {
-            combine_hashes(accum, Hasher{}(piece));
+            combine_to(accum, hash<Hasher>(piece));
         }
         return accum;
     }
 };
 
-template <typename T, template <typename> typename Hasher = CrcHash>
-constexpr auto hash(const T& val) noexcept(noexcept(Hasher<T>{}(val))) -> uint64_t {
-    return Hasher<T>{}(val);
-}
-
-template <std::size_t... Idx>
-auto combine_tuple(const auto& tp, std::index_sequence<Idx...> /*unused*/) noexcept -> uint64_t {
-    uint64_t accum = 0;
-    ((combine_to(accum, hash(std::get<Idx>(tp)))), ...);
-    return accum;
-}
-
-template <template <typename> typename Hasher = CrcHash>
-constexpr auto hash(const auto&... args) noexcept -> uint64_t {
-    return combine_tuple(std::tie(args...), std::make_index_sequence<sizeof...(args)>{});
-}
-
-template <typename T, typename Hasher = CrcHash<std::decay_t<T>>, size_t N>
+template <TTA Hasher = CrcHash, typename T, size_t N>
 constexpr auto hash_span(std::span<T, N> span) noexcept -> uint64_t {
     return hash_span_fn<T, Hasher>{}(span);
 }

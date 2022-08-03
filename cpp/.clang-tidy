@@ -11,5 +11,4 @@ Checks:
   readability*, -readability-identifier-length, 
   style*,
   
-  -*else-after-return,
-  '
+  -*else-after-return'

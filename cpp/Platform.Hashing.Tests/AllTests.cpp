@@ -4,6 +4,20 @@
 
 #include <list>
 
+namespace Platform::Hashing {
+// for guarantee de-optimize hash_span
+struct TrivialWrapper {
+    int t;
+
+    TrivialWrapper(int t) : t(t) {}
+};
+
+template <>
+struct CrcHash<TrivialWrapper> {
+    uint64_t operator()(const TrivialWrapper& t) const { return hash(t.t); }
+};
+}  // namespace Platform::Hashing
+
 namespace Platform::Hashing::Tests {
 TEST(CombineTest, Trivial) {
     std::uint64_t hash1 = 0;
@@ -24,8 +38,7 @@ TEST(HashingTest, Basic) {
         std::array a = {1, 2, 3};
         std::array b = {1, 2, 3};
         ASSERT_EQ(hash_span(std::span(a)), hash_span(std::span(b)));
-        ASSERT_EQ((hash_span<int32_t, std::hash<int32_t>>(std::span(a))),
-                  (hash_span<int32_t, std::hash<int32_t>>(std::span(b))));
+        ASSERT_EQ((hash_span<std::hash>(std::span(a))), (hash_span<std::hash>(std::span(b))));
     }
 
     {
@@ -55,7 +68,7 @@ TEST(HashingTest, Tuple) {
     ASSERT_EQ(hash4, hash3);
     uint64_t hash5 = hash(tuple);
     ASSERT_EQ(hash5, hash3);
-    uint64_t hash6 = hash<std::tuple<int, int>>({1, 2});
+    uint64_t hash6 = hash(std::tuple{1, 2});
     ASSERT_EQ(hash6, hash3);
     uint64_t hash7 = hash(tuple, tuple);
     ASSERT_NE(hash7, 0);
@@ -99,6 +112,16 @@ TEST(HashingTest, HashingRange) {
         uint64_t hash1 = hash_span(std::span(a));
         uint64_t hash2 = hash(b);
         ASSERT_NE(hash1, hash2);
+    }
+
+    {
+        auto a =
+            std::vector{TrivialWrapper{1}, TrivialWrapper{2}, TrivialWrapper{3}, TrivialWrapper{4}};
+        auto b = std::tuple{1, 2, 3, 4};
+
+        uint64_t hash1 = hash_span(std::span(a));
+        uint64_t hash2 = hash(b);
+        ASSERT_EQ(hash1, hash2);
     }
 
     {
