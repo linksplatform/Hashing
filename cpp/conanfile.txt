@@ -1,6 +1,7 @@
 [requires]
 gtest/cci.20210126
-benchmark/1.5.3
+benchmark/1.6.0
+platform.delegates/0.2.7
 
 [generators]
 cmake
