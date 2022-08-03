@@ -25,8 +25,8 @@ constexpr auto expand(uint32_t hash) noexcept -> uint64_t {
     // platform target requirement
     if constexpr (sizeof(uint64_t) == 8) {
         uint64_t add = 0;
-        combine_hashes(add, hash);
-        combine_hashes(add, add ^ hash);
+        combine_to(add, hash);
+        combine_to(add, add ^ hash);
         return static_cast<uint64_t>(hash) | add << (sizeof(uint32_t) * 8);
     } else {
         return hash;
