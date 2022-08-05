@@ -12,7 +12,7 @@
 
 #include "sse2neon/sse2neon.h"
 #else
-#if defined(__x86_64__) && defined(__PCLMUL__) && defined(__SSE2__)
+#if defined(__x86_64__)
 #include <immintrin.h>
 #endif
 #endif
