@@ -14,7 +14,7 @@ struct TrivialWrapper {
 
 template <>
 struct CrcHash<TrivialWrapper> {
-    uint64_t operator()(const TrivialWrapper& t) const { return hash(t.t); }
+    uint64_t operator()(const TrivialWrapper& t) const { return hash<CrcHash>(t.t); }
 };
 }  // namespace Platform::Hashing
 
