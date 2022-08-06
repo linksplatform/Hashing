@@ -25,8 +25,7 @@ constexpr auto combine_tuple(const auto& tp, std::index_sequence<Idx...> /*unuse
 }
 
 template <TTA Hasher = CrcHash, typename... Args>
-constexpr auto hash(const Args&... args) noexcept(noexport::noexcept_with<Hasher, Args...>)
-    -> uint64_t {
+constexpr auto hash(const Args&... args) noexcept(noexport::noexcept_with<Hasher, Args...>) {
     return combine_tuple<Hasher>(std::tie(args...), std::make_index_sequence<sizeof...(args)>{});
 }
 
