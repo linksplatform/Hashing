@@ -12,8 +12,7 @@ template <typename T>
 struct CrcHash {};
 
 template <TTA Hasher = CrcHash, typename T>
-constexpr auto hash(const T& val) noexcept(noexport::noexcept_with<Hasher, T>)
-    -> uint64_t {
+constexpr auto hash(const T& val) noexcept(noexport::noexcept_with<Hasher, T>) -> uint64_t {
     return Hasher<T>{}(val);
 }
 
@@ -46,7 +45,7 @@ struct hash_span_fn {
 };
 
 template <TTA Hasher = CrcHash, typename T, size_t N>
-constexpr auto hash_span(std::span<T, N> span) noexcept -> uint64_t {
+constexpr auto hash_span(std::span<T, N> span) noexcept(hash_span_fn<T, Hasher>{}(span)) {
     return hash_span_fn<T, Hasher>{}(span);
 }
 
