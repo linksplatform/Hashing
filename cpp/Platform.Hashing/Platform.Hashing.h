@@ -1,10 +1,12 @@
 #pragma once
 
-#include "Platform.Hashing.Crc32.h"
+#include <span>
+#include <functional>
+#include <cstdint>
 
-#include "Platform.Hashing.Combine.h"
-#include "Platform.Hashing.Expand.h"
-#include "Platform.Hashing.Hash.h"
-#include "Platform.Hashing.Tuple.h"
-#include "Platform.Hashing.Any.h"
-#include "Platform.Hashing.Ranges.h"
+#include "noexport.h"
+
+#include "crc32_impl.h"
+#include "combine.h"
+#include "hash.h"
+#include "crc.h"
