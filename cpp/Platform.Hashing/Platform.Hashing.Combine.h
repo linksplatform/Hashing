@@ -14,7 +14,7 @@ namespace Platform::Hashing
     template<typename T>
     void Combine(std::uint32_t& hashAccumulator, const T* value, std::size_t length)
     {
-        hashAccumulator = CombineHashes(hashAccumulator, Internal::crc32(reinterpret_cast<const std::uint8_t*>(value), length * sizeof(T), 0));
+        hashAccumulator = Internal::crc32(reinterpret_cast<const std::uint8_t*>(value), length * sizeof(T), hashAccumulator);
     }
 
     void Combine(std::uint32_t& hashAccumulator, auto&& value)

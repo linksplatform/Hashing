@@ -201,10 +201,10 @@ uint32_t crc32(const void *M, uint32_t bytes, uint32_t prev) {
 
 static constexpr uint32_t P = 0x82f63b78U;
 
-uint32_t crc32(const void* M, uint32_t bytes)
+uint32_t crc32(const void* M, uint32_t bytes, uint32_t prev)
 {
   const uint64_t* M64 = (const uint64_t*)M;
-  uint64_t R = 0;
+  uint64_t R = prev;
   for (uint32_t i = 0; i < bytes >> 3; ++i)
   {
     R = _mm_crc32_u64(R, M64[i]);
@@ -216,10 +216,10 @@ uint32_t crc32(const void* M, uint32_t bytes)
 
 static constexpr uint32_t P = 0x82f63b78U;
 
-uint32_t crc32(const void* M, uint32_t bytes)
+uint32_t crc32(const void* M, uint32_t bytes, uint32_t prev)
 {
   const uint8_t* M8 = (const uint8_t*)M;
-  uint32_t R = 0;
+  uint32_t R = prev;
   for (uint32_t i = 0; i < bytes; ++i)
   {
     R ^= M8[i];
