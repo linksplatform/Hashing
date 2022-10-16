@@ -197,28 +197,29 @@ uint32_t crc32(const void *M, uint32_t bytes, uint32_t prev) {
   return (uint32_t)crcA;
 }
 
-#elif defined(_X86_64_) || defined(_AARCH_)
+#elif defined(_X86_64_) || defined(_AARCH_) // without pclmul
 
-static constexpr uint32_t P = 0x82f63b78U;
-
-uint32_t crc32(const void* M, uint32_t bytes, uint32_t prev)
+uint32_t crc32(const uint8_t* M8, uint32_t bytes, uint32_t prev)
 {
-  const uint64_t* M64 = (const uint64_t*)M;
-  uint64_t R = prev;
-  for (uint32_t i = 0; i < bytes >> 3; ++i)
-  {
-    R = _mm_crc32_u64(R, M64[i]);
-  }
-  return (uint32_t)R;
-}
+  uint32_t R = prev;
 
+  if ((size_t)M8 % 8 == 0) {
+    auto* M64 = (uint64_t *)M8;
+    for (uint32_t i = 0; bytes >= 8; ++i, (void)(bytes -= 8)) {
+      R = _mm_crc32_u64(R, M64[i]);
+    }
+  }
+
+  for (uint32_t i = 0; i < bytes; ++i) {
+    R = _mm_crc32_u8(R, M8[i]);
+  }
+
+  return R;
+}
 #else // fallback
 
-static constexpr uint32_t P = 0x82f63b78U;
-
-uint32_t crc32(const void* M, uint32_t bytes, uint32_t prev)
+uint32_t crc32(const uint8_t* M8, uint32_t bytes, uint32_t prev)
 {
-  const uint8_t* M8 = (const uint8_t*)M;
   uint32_t R = prev;
   for (uint32_t i = 0; i < bytes; ++i)
   {
