@@ -25,9 +25,9 @@
 
 namespace Platform::Hashing::Internal {
 
-#if (defined(_X86_64_) && defined(__PCLMUL__)) || defined(_AARCH_)
-
 static constexpr uint32_t P = 0x82f63b78U;
+
+#if ((defined(_X86_64_) && defined(__PCLMUL__)) || defined(_AARCH_)) && false
 
 static constexpr uint64_t g_lut[] = {
     0x00000001493c7d27, 0x493c7d27ba4fc28e, 0xf20c0dfeddc0152b,
@@ -158,7 +158,7 @@ void compute_lut(uint32_t *pTbl, uint32_t n) {
 
 static constexpr uint32_t LEAF_SIZE_INTEL = 6 * 24;
 
-uint32_t crc32(const void *M, uint32_t bytes, uint32_t prev) {
+size_t crc32(const void *M, size_t bytes, size_t prev) {
   uint64_t pA = (uint64_t)M;
   uint64_t crcA = prev;
   uint32_t toAlign = ((uint64_t) - (int64_t)pA) & 7;
@@ -194,42 +194,43 @@ uint32_t crc32(const void *M, uint32_t bytes, uint32_t prev) {
   for (; bytes; --bytes, ++pA)
     crcA = _mm_crc32_u8((uint32_t)crcA, *(uint8_t *)(pA));
 
-  return (uint32_t)crcA;
+  return crcA;
 }
 
 #elif defined(_X86_64_) || defined(_AARCH_) // without pclmul
 
-uint32_t crc32(const uint8_t* M8, uint32_t bytes, uint32_t prev)
+size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
 {
-  uint32_t R = prev;
+  size_t acc = prev;
+  size_t to_align = (0 - (size_t)data) & 7;
 
-  if ((size_t)M8 % 8 == 0) {
-    auto* M64 = (uint64_t *)M8;
-    for (uint32_t i = 0; bytes >= 8; ++i, (void)(bytes -= 8)) {
-      R = _mm_crc32_u64(R, M64[i]);
-    }
+  for (size_t i = 0; to_align--; i++, bytes--) {
+    acc = _mm_crc32_u8(acc, data[i]);
   }
 
-  for (uint32_t i = 0; i < bytes; ++i) {
-    R = _mm_crc32_u8(R, M8[i]);
+  for (size_t i = 0; bytes >= 8; i++, (void)(bytes -= 8)) {
+    acc = _mm_crc32_u64(acc, ((uint64_t*)data)[i]);
   }
 
-  return R;
+  for (size_t i = 0; i < bytes; ++i) {
+    acc = _mm_crc32_u8(acc, data[i]);
+  }
+  return acc;
 }
 #else // fallback
 
-uint32_t crc32(const uint8_t* M8, uint32_t bytes, uint32_t prev)
+size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
 {
-  uint32_t R = prev;
-  for (uint32_t i = 0; i < bytes; ++i)
+  size_t acc = prev;
+  for (size_t i = 0; i < bytes; ++i)
   {
-    R ^= M8[i];
-    for (uint32_t j = 0; j < 8; ++j)
+    acc ^= data[i];
+    for (size_t j = 0; j < 8; ++j)
     {
-      R = R & 1 ? (R >> 1) ^ P : R >> 1;
+      acc = acc & 1 ? (acc >> 1) ^ P : acc >> 1;
     }
   }
-  return R;
+  return acc;
 }
 
 #endif
