@@ -27,7 +27,7 @@ namespace Platform::Hashing::Internal {
 
 static constexpr uint32_t P = 0x82f63b78U;
 
-#if ((defined(_X86_64_) && defined(__PCLMUL__)) || defined(_AARCH_)) && false
+#if (defined(_X86_64_) && defined(__PCLMUL__)) || defined(_AARCH_)
 
 static constexpr uint64_t g_lut[] = {
     0x00000001493c7d27, 0x493c7d27ba4fc28e, 0xf20c0dfeddc0152b,
