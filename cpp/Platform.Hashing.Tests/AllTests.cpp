@@ -9,7 +9,7 @@ namespace Platform::Hashing::Tests
 {
     TEST(CombineTest, Trivial)
     {
-        std::uint32_t hash1 = 0;
+        std::size_t hash1 = 0;
         Combine(hash1, 42);
         ASSERT_NE(0U, hash1);
         std::uint32_t hash2 = 0;
