@@ -204,15 +204,17 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
   size_t acc = prev;
   size_t to_align = (0 - (size_t)data) & 7;
 
-  for (size_t i = 0; to_align--; i++, bytes--) {
+  size_t i = 0
+
+  for (; to_align--; i++, bytes--) {
     acc = _mm_crc32_u8(acc, data[i]);
   }
 
-  for (size_t i = 0; bytes >= 8; i++, (void)(bytes -= 8)) {
+  for (; bytes >= 8; i++, (void)(bytes -= 8)) {
     acc = _mm_crc32_u64(acc, ((uint64_t*)data)[i]);
   }
 
-  for (size_t i = 0; i < bytes; ++i) {
+  for (; i < bytes; ++i) {
     acc = _mm_crc32_u8(acc, data[i]);
   }
   return acc;
