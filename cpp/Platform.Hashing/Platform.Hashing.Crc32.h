@@ -210,7 +210,7 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
     acc = _mm_crc32_u8(acc, data[i]);
   }
 
-  for (; bytes >= 8; i++, (void)(bytes -= 8)) {
+  for (; bytes >= 8; (void)(i += 8), (void)(bytes -= 8)) {
     acc = _mm_crc32_u64(acc, ((uint64_t*)data)[i]);
   }
 
