@@ -17,12 +17,12 @@ namespace std
         {
             using namespace Platform::Hashing;
             using TItem = std::ranges::range_value_t<Self>;
-            std::uint32_t hash = 0;
 
+            std::size_t hash = 0;
             if constexpr (is_fundamental_v<TItem>)
             {
                 Combine(hash, std::ranges::data(collection), std::ranges::size(collection));
-                return Expand(hash);
+                return hash;
             }
             else
             {
@@ -33,7 +33,7 @@ namespace std
                     hash = CombineHashes(hash, Hash(*data));
                     ++data;
                 }
-                return Expand(hash);
+                return hash;
             }
         }
     };
@@ -52,7 +52,8 @@ namespace std
         std::size_t operator()(const Self& collection) const
         {
             using TItem = std::ranges::range_value_t<Self>;
-            std::uint32_t hash = 0;
+
+            std::size_t hash = 0;
             std::size_t size = 0;
             std::vector<TItem> data;
 
