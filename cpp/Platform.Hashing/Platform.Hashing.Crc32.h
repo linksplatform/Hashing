@@ -160,8 +160,8 @@ void compute_lut(uint32_t *pTbl, uint32_t n) {
 
 static constexpr uint32_t LEAF_SIZE_INTEL = 6 * 24;
 
-size_t crc32(const void *M, size_t bytes, size_t prev) {
-  uint64_t pA = (uint64_t)M;
+size_t crc32(const uint8_t* data, size_t bytes, size_t prev) {
+  uint64_t pA = (uint64_t)data;
   uint64_t crcA = prev;
   uint32_t toAlign = ((uint64_t) - (int64_t)pA) & 7;
 
