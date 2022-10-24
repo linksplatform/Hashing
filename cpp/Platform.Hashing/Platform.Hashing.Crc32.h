@@ -23,6 +23,8 @@
 #include <immintrin.h>
 #endif
 
+#include "Platform.Hashing.CombineHashes.h"
+
 namespace Platform::Hashing::Internal {
 
 static constexpr uint32_t P = 0x82f63b78U;
@@ -202,12 +204,14 @@ size_t crc32(const void *M, size_t bytes, size_t prev) {
 size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
 {
   size_t acc = prev;
-  size_t to_align = (0 - (size_t)data) & 7;
+  size_t align = (0 - (size_t)data) & 7;
 
   size_t i = 0;
 
-  for (; to_align--; i++, bytes--) {
-    acc = _mm_crc32_u8(acc, data[i]);
+  for (; align && bytes; i++, align--, bytes--) {
+    // `acc` is 64-bit but `_mm_crc32_u8` - 32
+    // we los data if we use combining from it
+    acc = CombineHashes(acc, _mm_crc32_u8(acc, data[i]));
   }
 
   for (; bytes >= 8; (void)(i += 8), (void)(bytes -= 8)) {
@@ -215,7 +219,7 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
   }
 
   for (; i < bytes; ++i) {
-    acc = _mm_crc32_u8(acc, data[i]);
+    acc = CombineHashes(acc, _mm_crc32_u8(acc, data[i]));
   }
   return acc;
 }
