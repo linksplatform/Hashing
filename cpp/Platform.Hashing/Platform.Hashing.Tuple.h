@@ -11,7 +11,7 @@ namespace Platform::Hashing
     template <class TupleType, size_t Index = std::tuple_size<TupleType>::value - 1>
     struct Tuple
     {
-        static void Combine(std::size_t & hashAccumulator, const TupleType& tuple)
+        static void Combine(std::size_t& hashAccumulator, const TupleType& tuple)
         {
             Tuple<TupleType, Index - 1>::Combine(hashAccumulator, tuple);
             std::size_t hash = Hashing::Hash(std::get<Index>(tuple));

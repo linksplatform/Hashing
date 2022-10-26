@@ -209,16 +209,16 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
   size_t i = 0;
 
   for (; align && bytes; i++, align--, bytes--) {
-    // `acc` is 64-bit but `_mm_crc32_u8` - 32
-    // we los data if we use combining from it
-    acc = CombineHashes(acc, _mm_crc32_u8(acc, data[i]));
+    acc = _mm_crc32_u8(acc, data[i]);
   }
 
-  for (; bytes >= 8; (void)(i += 8), (void)(bytes -= 8)) {
+  for (; bytes >= 8; i += 8, bytes -= 8) {
     acc = _mm_crc32_u64(acc, ((uint64_t*)data)[i]);
   }
 
-  for (; i < bytes; ++i) {
+  for (; bytes; ++i, bytes--) {
+    // `acc` may be 64-bit but `_mm_crc32_u8` is 32-bit
+    // we may lose data if we use combining from it
     acc = CombineHashes(acc, _mm_crc32_u8(acc, data[i]));
   }
   return acc;
