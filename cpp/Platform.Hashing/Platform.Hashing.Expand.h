@@ -10,7 +10,7 @@ namespace Platform::Hashing
     {
         if constexpr (sizeof(std::size_t) > sizeof(std::uint32_t))
         {
-            std::uint32_t additionalHash = 0;
+            std::size_t additionalHash = 0;
             Combine(additionalHash, originalHash);
             Combine(additionalHash, additionalHash ^ originalHash);
             std::size_t hash = static_cast<std::size_t>(originalHash) | (static_cast<std::size_t>(additionalHash) << (sizeof(std::uint32_t) * 8));

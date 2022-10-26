@@ -4,8 +4,6 @@
 #include <cstring>
 #include <ranges>
 
-#include "Platform.Hashing.Expand.h"
-
 namespace Platform::Hashing
 {
 
@@ -43,9 +41,9 @@ namespace Platform::Hashing
 
     template<typename T> std::size_t HashRaw(const T &value, std::size_t size = 1)
     {
-        std::uint32_t hash = typeid(T).hash_code();
+        std::size_t hash = typeid(T).hash_code();
         Combine(hash, &value, size);
-        return Expand(hash);
+        return hash;
     }
 
     std::size_t Hash(auto&& value)
