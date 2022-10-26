@@ -39,7 +39,7 @@ namespace std
         {
             std::size_t hash = 0;
             Platform::Hashing::Tuple<std::tuple<Types...>>::Combine(hash, tuple);
-            return Platform::Hashing::Expand(hash);
+            return hash;
         }
     };
 }
