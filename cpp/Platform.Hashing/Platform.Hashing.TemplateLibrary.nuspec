@@ -11,10 +11,9 @@
 Use Platform.Hashing.h file to include the whole library.
 </description>
     <releaseNotes>
-- improved performance for Intel processors
-- improved support for non-sse2 processors
+- Fix build in aarch and unsupported
 </releaseNotes>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
