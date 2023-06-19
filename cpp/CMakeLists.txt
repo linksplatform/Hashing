@@ -1,22 +1,29 @@
 cmake_minimum_required(VERSION 3.8)
 project(Platform.Hashing)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+set(LINKS_PLATFORM_TESTS ON CACHE BOOL "Whether to compile tests")
+set(LINKS_PLATFORM_BENCHMARKS OFF CACHE BOOL "Whether to compile benchmarks")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+find_package(GTest REQUIRED)
+include_directories(${GTest_INCLUDE_DIRS})
+find_package(benchmark)
 
 add_library(${PROJECT_NAME}.Library INTERFACE)
 target_include_directories(${PROJECT_NAME}.Library INTERFACE ${PROJECT_NAME})
 target_compile_options(${PROJECT_NAME}.Library INTERFACE -march=native)
 
-if((DEFINED LINKS_PLATFORM_TESTS) AND (${LINKS_PLATFORM_TESTS}))
-    # Tests
+if(${LINKS_PLATFORM_TESTS})
     add_executable(${PROJECT_NAME}.Tests ${PROJECT_NAME}.Tests/AllTests.cpp)
-    target_link_libraries(${PROJECT_NAME}.Tests PRIVATE ${PROJECT_NAME}.Library)
-    target_link_libraries(${PROJECT_NAME}.Tests PRIVATE CONAN_PKG::gtest)
     set_target_properties(${PROJECT_NAME}.Tests PROPERTIES CXX_STANDARD 20)
-    # Benchmarks
+    target_link_libraries(${PROJECT_NAME}.Tests PRIVATE GTest::gtest)
+    target_link_libraries(${PROJECT_NAME}.Tests PRIVATE GTest::gtest_main)
+    target_link_libraries(${PROJECT_NAME}.Tests PRIVATE ${PROJECT_NAME}.Library)
+endif()
+
+if(${LINKS_PLATFORM_BENCHMARKS})
     add_executable(${PROJECT_NAME}.Benchmarks ${PROJECT_NAME}.Benchmarks/Main.cpp)
-    target_link_libraries(${PROJECT_NAME}.Benchmarks PRIVATE ${PROJECT_NAME}.Library)
-    target_link_libraries(${PROJECT_NAME}.Benchmarks PRIVATE CONAN_PKG::benchmark)
     set_target_properties(${PROJECT_NAME}.Benchmarks PROPERTIES CXX_STANDARD 20)
+    target_link_libraries(${PROJECT_NAME}.Benchmarks PRIVATE benchmark::benchmark)
+    target_link_libraries(${PROJECT_NAME}.Benchmarks PRIVATE benchmark::benchmark_main)
+    target_link_libraries(${PROJECT_NAME}.Benchmarks PRIVATE ${PROJECT_NAME}.Library)
 endif()
