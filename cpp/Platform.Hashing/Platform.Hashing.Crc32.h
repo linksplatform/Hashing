@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <atomic>
 
 #if defined(__aarch64__)
 #define _AARCH_
@@ -14,22 +15,57 @@
 #define _X86_64_
 #endif
 
-#ifdef _AARCH_
-#include "sse2neon/sse2neon.h"
-#include <arm_acle.h>
+#ifdef _X86_64_
+#include "cpuinfo_x86.h"
+#include <immintrin.h>
 #endif
 
-#ifdef _X86_64_
-#include <immintrin.h>
+#ifdef _AARCH_
+#include "cpuinfo_arm.h"
+#include "sse2neon/sse2neon.h"
+#include <arm_acle.h>
 #endif
 
 #include "Platform.Hashing.CombineHashes.h"
 
 namespace Platform::Hashing::Internal {
 
-static constexpr uint32_t P = 0x82f63b78U;
+size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev);
+size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev);
+size_t crc32fallback(const uint8_t* data, size_t bytes, size_t prev);
+size_t crc32default(const uint8_t* data, size_t bytes, size_t prev);
 
-#if (defined(_X86_64_) && defined(__PCLMUL__)) || defined(_AARCH_)
+using Crc32FuncPtr = size_t (*)(const uint8_t* data, size_t bytes, size_t prev);
+
+std::atomic<Crc32FuncPtr> atomicFuncPtr(crc32default);
+
+size_t crc32(const uint8_t* data, size_t bytes, size_t prev) {
+  return atomicFuncPtr.load(std::memory_order_relaxed)(data, bytes, prev);
+}
+
+size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
+  using namespace cpu_features;
+  Crc32FuncPtr ptr;
+  #ifdef _X86_64_
+  static const X86Features features = GetX86Info().features;
+  if(features.sse2 && features.pclmulqdq) {
+  #elif defined(_AARCH_)
+  static const ArmFeatures features = GetArmInfo().features;
+  if(features.neon && features.pmull) {
+  #endif
+    ptr = crc32sse2_with_pclmul;
+  }
+  else if(features.sse2) {
+    ptr = crc32sse2_without_pclmul;
+  }
+  else {
+    ptr = crc32fallback;
+  }
+  atomicFuncPtr.store(ptr, std::memory_order_relaxed);
+  return crc32(data, bytes, prev);
+}
+
+static constexpr uint32_t P = 0x82f63b78U;
 
 static constexpr uint64_t g_lut[] = {
     0x00000001493c7d27, 0x493c7d27ba4fc28e, 0xf20c0dfeddc0152b,
@@ -160,7 +196,7 @@ void compute_lut(uint32_t *pTbl, uint32_t n) {
 
 static constexpr uint32_t LEAF_SIZE_INTEL = 6 * 24;
 
-size_t crc32(const uint8_t* data, size_t bytes, size_t prev) {
+size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev) {
   uint64_t pA = (uint64_t)data;
   uint64_t crcA = prev;
   uint32_t toAlign = ((uint64_t) - (int64_t)pA) & 7;
@@ -199,9 +235,7 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev) {
   return crcA;
 }
 
-#elif defined(_X86_64_) || defined(_AARCH_) // without pclmul
-
-size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
+size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev)
 {
   size_t acc = prev;
   size_t align = (0 - (size_t)data) & 7;
@@ -223,9 +257,8 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
   }
   return acc;
 }
-#else // fallback
 
-size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
+size_t crc32fallback(const uint8_t* data, size_t bytes, size_t prev)
 {
   size_t acc = prev;
   for (size_t i = 0; i < bytes; ++i)
@@ -238,8 +271,6 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev)
   }
   return acc;
 }
-
-#endif
 
 } // namespace Platform::Hashing::Internal
 
