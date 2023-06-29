@@ -5,11 +5,13 @@ set(LINKS_PLATFORM_TESTS ON CACHE BOOL "Whether to compile tests")
 set(LINKS_PLATFORM_BENCHMARKS OFF CACHE BOOL "Whether to compile benchmarks")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 find_package(GTest REQUIRED)
+find_package(CpuFeatures REQUIRED CONFIG)
 include_directories(${GTest_INCLUDE_DIRS})
 find_package(benchmark)
 
 add_library(${PROJECT_NAME}.Library INTERFACE)
 target_include_directories(${PROJECT_NAME}.Library INTERFACE ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}.Library INTERFACE CpuFeatures::cpu_features)
 target_compile_options(${PROJECT_NAME}.Library INTERFACE -march=native)
 
 if(${LINKS_PLATFORM_TESTS})
