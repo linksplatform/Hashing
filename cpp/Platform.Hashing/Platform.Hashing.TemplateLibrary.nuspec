@@ -10,8 +10,8 @@
 - std::any
 Use Platform.Hashing.h file to include the whole library.
 </description>
-    <releaseNotes> Translated build files to conan 2.0 </releaseNotes>
-    <version>0.5.0</version>
+    <releaseNotes> Added runtime check for cpu configuration </releaseNotes>
+    <version>0.5.1</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
