@@ -56,16 +56,12 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev) {
 size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
   using namespace cpu_features;
   Crc32FuncPtr ptr;
-  #ifdef _X86_64_
+#ifdef _X86_64_
   static const X86Features features = GetX86Info().features;
-  if(features.sse2 && features.pclmulqdq) {
-  #elif defined(_AARCH_)
-  static const ArmFeatures features = GetArmInfo().features;
-  if(features.neon && features.pmull) {
-  #endif
+  if(features.sse4_2 && features.pclmulqdq) {
     ptr = crc32sse2_with_pclmul;
   }
-  else if(features.sse2) {
+  else if(features.sse4_2) {
     ptr = crc32sse2_without_pclmul;
   }
   else {
@@ -73,6 +69,20 @@ size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
   }
   atomicFuncPtr.store(ptr, std::memory_order_relaxed);
   return crc32(data, bytes, prev);
+#elif defined(_AARCH_)
+  static const Aarch64Features features = GetAarch64Info().features;
+  if(features.crc32 && features.pmull) {
+    ptr = crc32_pclmul_vmull_p64_crc32;
+  }
+  else if(features.crc32) {
+    ptr = crc32_pclmul_vmull_p64_polyfill_crc32;
+  }
+  else {
+    ptr = crc32fallback;
+  }
+  atomicFuncPtr.store(ptr, std::memory_order_relaxed);
+  return crc32(data, bytes, prev);
+#endif
 }
 
 static constexpr uint32_t P = 0x82f63b78U;
@@ -168,8 +178,6 @@ static constexpr uint64_t g_lut[] = {
 
 #ifdef _X86_64_
 target_feature("crc32")
-#elif defined(_AARCH_)
-target_feature("+crc")
 #endif
 void compute_lut(uint32_t *pTbl, uint32_t n) {
   uint64_t R = 1;
@@ -183,8 +191,6 @@ template<int N>
 struct CRC {
 #ifdef _X86_64_
   target_feature("crc32,sse4.2")
-#elif defined(_AARCH_)
-  target_feature("+crc")
 #endif
   static void calculate(uint64_t& pA, uint64_t& pB, uint64_t& pC, uint64_t& crcA, uint64_t& crcB, uint64_t& crcC) {
     crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8 * N));
@@ -198,8 +204,6 @@ template<>
 struct CRC<2> {
 #ifdef _X86_64_
   target_feature("crc32,sse4.2")
-#elif defined(_AARCH_)
-  target_feature("+crc")
 #endif
   static void calculate(uint64_t& pA, uint64_t& pB, uint64_t& pC, uint64_t& crcA, uint64_t& crcB, uint64_t& crcC) {
     crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8 * 2));
@@ -309,7 +313,7 @@ size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t pr
 }
 
 //crc32_pclmul_vmull_p64_polyfill_crc32
-size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t prev) {
+size_t crc32_pclmul_vmull_p64_polyfill_crc32(const uint8_t* data, size_t bytes, size_t prev) {
   uint64_t pA = (uint64_t)data;
   uint64_t crcA = prev;
   uint32_t toAlign = ((uint64_t) - (int64_t)pA) & 7;
@@ -338,30 +342,6 @@ size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t pr
     bytes -= 24 * n;
     pA = pC;
   }
-}
-
-//crc32_without_pclmul
-size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev)
-{
-  size_t acc = prev;
-  size_t align = (0 - (size_t)data) & 7;
-
-  size_t i = 0;
-
-  for (; align && bytes; i++, align--, bytes--) {
-    acc = _mm_crc32_u8(acc, data[i]);
-  }
-
-  for (; bytes >= 8; i += 8, bytes -= 8) {
-    acc = _mm_crc32_u64(acc, ((uint64_t*)data)[i]);
-  }
-
-  for (; bytes; ++i, bytes--) {
-    // `acc` may be 64-bit but `_mm_crc32_u8` is 32-bit
-    // we may lose data if we use combining from it
-    acc = CombineHashes(acc, _mm_crc32_u8(acc, data[i]));
-  }
-  return acc;
 }
 #endif
 
