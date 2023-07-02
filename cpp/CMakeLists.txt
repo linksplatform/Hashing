@@ -12,7 +12,6 @@ find_package(benchmark)
 add_library(${PROJECT_NAME}.Library INTERFACE)
 target_include_directories(${PROJECT_NAME}.Library INTERFACE ${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME}.Library INTERFACE CpuFeatures::cpu_features)
-target_compile_options(${PROJECT_NAME}.Library INTERFACE -march=native)
 
 if(${LINKS_PLATFORM_TESTS})
     add_executable(${PROJECT_NAME}.Tests ${PROJECT_NAME}.Tests/AllTests.cpp)
