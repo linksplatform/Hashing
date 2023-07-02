@@ -11,6 +11,14 @@
 #include <cstdio>
 #include <atomic>
 
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
+  #define target_feature(feature) __attribute__((target(feature)))
+#elif defined(__MSVC__)
+  #define target_feature(feature) // empty
+#else
+  #error "compiler is not supported"
+#endif
+
 #if defined(__aarch64__)
 #define _AARCH_
 #elif defined(__x86_64__)
@@ -32,10 +40,16 @@
 
 namespace Platform::Hashing::Internal {
 
+size_t crc32default(const uint8_t* data, size_t bytes, size_t prev);
+
+#ifdef _X86_64_
 size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev);
 size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev);
+#elif defined(_AARCH_)
+size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t prev);
+size_t crc32_pclmul_vmull_p64_polyfill_crc32(cosnt uint8_t* data, size_t bytes, size_t prev);
+#endif
 size_t crc32fallback(const uint8_t* data, size_t bytes, size_t prev);
-size_t crc32default(const uint8_t* data, size_t bytes, size_t prev);
 
 using Crc32FuncPtr = size_t (*)(const uint8_t* data, size_t bytes, size_t prev);
 
@@ -48,16 +62,12 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev) {
 size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
   using namespace cpu_features;
   Crc32FuncPtr ptr;
-  #ifdef _X86_64_
+#ifdef _X86_64_
   static const X86Features features = GetX86Info().features;
-  if(features.sse2 && features.pclmulqdq) {
-  #elif defined(_AARCH_)
-  static const ArmFeatures features = GetArmInfo().features;
-  if(features.neon && features.pmull) {
-  #endif
+  if(features.sse4_2 && features.pclmulqdq) {
     ptr = crc32sse2_with_pclmul;
   }
-  else if(features.sse2) {
+  else if(features.sse4_2) {
     ptr = crc32sse2_without_pclmul;
   }
   else {
@@ -65,6 +75,20 @@ size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
   }
   atomicFuncPtr.store(ptr, std::memory_order_relaxed);
   return crc32(data, bytes, prev);
+#elif defined(_AARCH_)
+  static const Aarch64Features features = GetAarch64Info().features;
+  if(features.crc32 && features.pmull) {
+    ptr = crc32_pclmul_vmull_p64_crc32;
+  }
+  else if(features.crc32) {
+    ptr = crc32_pclmul_vmull_p64_polyfill_crc32;
+  }
+  else {
+    ptr = crc32fallback;
+  }
+  atomicFuncPtr.store(ptr, std::memory_order_relaxed);
+  return crc32(data, bytes, prev);
+#endif
 }
 
 static constexpr uint32_t P = 0x82f63b78U;
@@ -158,6 +182,9 @@ static constexpr uint64_t g_lut[] = {
     0xa51b613582f89c77,
 };
 
+#ifdef _X86_64_
+target_feature("crc32")
+#endif
 void compute_lut(uint32_t *pTbl, uint32_t n) {
   uint64_t R = 1;
   for (uint32_t i = 0; i < n << 1; ++i) {
@@ -166,38 +193,35 @@ void compute_lut(uint32_t *pTbl, uint32_t n) {
   }
 }
 
-#undef CRC_ITER
-#undef X0
-#undef X1
-#undef X2
-#undef X3
-#undef X4
-#undef X5
-#undef X6
-#undef X7
-#undef CRC_ITERS_256_TO_2
+template<int N>
+struct CRC {
+#ifdef _X86_64_
+  target_feature("crc32,sse4.2")
+#endif
+  static void calculate(uint64_t& pA, uint64_t& pB, uint64_t& pC, uint64_t& crcA, uint64_t& crcB, uint64_t& crcC) {
+    crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8 * N));
+    crcB = _mm_crc32_u64(crcB, *(uint64_t *)(pB - 8 * N));
+    crcC = _mm_crc32_u64(crcC, *(uint64_t *)(pC - 8 * N));
+    CRC<N - 2>::calculate(pA, pB, pC, crcA, crcB, crcC);
+  }
+};
 
-#define CRC_ITER(i)                                                            \
-  case i:                                                                      \
-    crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8 * (i)));                   \
-    crcB = _mm_crc32_u64(crcB, *(uint64_t *)(pB - 8 * (i)));                   \
-    crcC = _mm_crc32_u64(crcC, *(uint64_t *)(pC - 8 * (i)));
-
-#define X0(n) CRC_ITER(n);
-#define X1(n) X0((n) + 1) X0(n)
-#define X2(n) X1((n) + 2) X1(n)
-#define X3(n) X2((n) + 4) X2(n)
-#define X4(n) X3((n) + 8) X3(n)
-#define X5(n) X4((n) + 16) X4(n)
-#define X6(n) X5((n) + 32) X5(n)
-#define X7(n) X6((n) + 64) X6(n)
-#define CRC_ITERS_256_TO_2()                                                   \
-  do {                                                                         \
-    X0(256) X1(254) X2(250) X3(242) X4(226) X5(194) X6(130) X7(2)              \
-  } while (0)
+template<>
+struct CRC<2> {
+#ifdef _X86_64_
+  target_feature("crc32,sse4.2")
+#endif
+  static void calculate(uint64_t& pA, uint64_t& pB, uint64_t& pC, uint64_t& crcA, uint64_t& crcB, uint64_t& crcC) {
+    crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8 * 2));
+    crcB = _mm_crc32_u64(crcB, *(uint64_t *)(pB - 8 * 2));
+    crcC = _mm_crc32_u64(crcC, *(uint64_t *)(pC - 8 * 2));
+  }
+};
 
 static constexpr uint32_t LEAF_SIZE_INTEL = 6 * 24;
 
+#ifdef _X86_64_
+target_feature("crc32,sse4.1,pclmul")
 size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev) {
   uint64_t pA = (uint64_t)data;
   uint64_t crcA = prev;
@@ -212,8 +236,8 @@ size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev) {
     uint64_t pB = pA + 8 * n;
     uint64_t pC = pB + 8 * n;
     uint64_t crcB = 0, crcC = 0;
-    switch (n)
-      CRC_ITERS_256_TO_2();
+    
+    CRC<256>::calculate(pA, pB, pC, crcA, crcB, crcC);
 
     crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8));
     crcB = _mm_crc32_u64(crcB, *(uint64_t *)(pB - 8));
@@ -237,6 +261,7 @@ size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev) {
   return crcA;
 }
 
+target_feature("crc32")
 size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev)
 {
   size_t acc = prev;
@@ -260,6 +285,72 @@ size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev)
   return acc;
 }
 
+#elif defined(_AARCH_)
+target_feature("+crypto")
+size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t prev) {
+  uint64_t pA = (uint64_t)data;
+  uint64_t crcA = prev;
+  uint32_t toAlign = ((uint64_t) - (int64_t)pA) & 7;
+
+  for (; toAlign && bytes; ++pA, --bytes, --toAlign)
+    crcA = _mm_crc32_u8((uint32_t)crcA, *(uint8_t *)pA);
+
+  while (bytes >= LEAF_SIZE_INTEL) {
+    const uint32_t n = bytes < 256 * 24 ? bytes * 2731 >> 16 : 256;
+    pA += 8 * n;
+    uint64_t pB = pA + 8 * n;
+    uint64_t pC = pB + 8 * n;
+    uint64_t crcB = 0, crcC = 0;
+    
+    CRC<256>::calculate(pA, pB, pC, crcA, crcB, crcC);
+
+    crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8));
+    crcB = _mm_crc32_u64(crcB, *(uint64_t *)(pB - 8));
+    const __m128i vK =
+        _mm_cvtepu32_epi64(_mm_loadu_si128((__m128i *)(&g_lut[n - 1])));
+    const __m128i vA = _mm_clmulepi64_si128_native(_mm_cvtsi64_si128(crcA), vK, 0);
+    const __m128i vB = _mm_clmulepi64_si128_native(_mm_cvtsi64_si128(crcB), vK, 16);
+    crcA = _mm_crc32_u64(crcC, _mm_cvtsi128_si64(_mm_xor_si128(vA, vB)) ^
+                                   *(uint64_t *)(pC - 8));
+
+    bytes -= 24 * n;
+    pA = pC;
+  }
+}
+
+//crc32_pclmul_vmull_p64_polyfill_crc32
+size_t crc32_pclmul_vmull_p64_polyfill_crc32(const uint8_t* data, size_t bytes, size_t prev) {
+  uint64_t pA = (uint64_t)data;
+  uint64_t crcA = prev;
+  uint32_t toAlign = ((uint64_t) - (int64_t)pA) & 7;
+
+  for (; toAlign && bytes; ++pA, --bytes, --toAlign)
+    crcA = _mm_crc32_u8((uint32_t)crcA, *(uint8_t *)pA);
+
+  while (bytes >= LEAF_SIZE_INTEL) {
+    const uint32_t n = bytes < 256 * 24 ? bytes * 2731 >> 16 : 256;
+    pA += 8 * n;
+    uint64_t pB = pA + 8 * n;
+    uint64_t pC = pB + 8 * n;
+    uint64_t crcB = 0, crcC = 0;
+    
+    CRC<256>::calculate(pA, pB, pC, crcA, crcB, crcC);
+
+    crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA - 8));
+    crcB = _mm_crc32_u64(crcB, *(uint64_t *)(pB - 8));
+    const __m128i vK =
+        _mm_cvtepu32_epi64(_mm_loadu_si128((__m128i *)(&g_lut[n - 1])));
+    const __m128i vA = _mm_clmulepi64_si128_polyfill(_mm_cvtsi64_si128(crcA), vK, 0);
+    const __m128i vB = _mm_clmulepi64_si128_polyfill(_mm_cvtsi64_si128(crcB), vK, 16);
+    crcA = _mm_crc32_u64(crcC, _mm_cvtsi128_si64(_mm_xor_si128(vA, vB)) ^
+                                   *(uint64_t *)(pC - 8));
+
+    bytes -= 24 * n;
+    pA = pC;
+  }
+}
+#endif
+
 size_t crc32fallback(const uint8_t* data, size_t bytes, size_t prev)
 {
   size_t acc = prev;
@@ -275,14 +366,3 @@ size_t crc32fallback(const uint8_t* data, size_t bytes, size_t prev)
 }
 
 } // namespace Platform::Hashing::Internal
-
-#undef CRC_ITER
-#undef X0
-#undef X1
-#undef X2
-#undef X3
-#undef X4
-#undef X5
-#undef X6
-#undef X7
-#undef CRC_ITERS_256_TO_2

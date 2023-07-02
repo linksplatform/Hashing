@@ -674,15 +674,15 @@ FORCE_INLINE void _sse2neon_kadd_f32(float *sum, float *c, float y)
     *sum = t;
 }
 
-#if defined(__ARM_FEATURE_CRYPTO)
 // Wraps vmull_p64
-FORCE_INLINE uint64x2_t _sse2neon_vmull_p64(uint64x1_t _a, uint64x1_t _b)
+FORCE_INLINE uint64x2_t _native_vmull_p64(uint64x1_t _a, uint64x1_t _b)
 {
     poly64_t a = vget_lane_p64(vreinterpret_p64_u64(_a), 0);
     poly64_t b = vget_lane_p64(vreinterpret_p64_u64(_b), 0);
     return vreinterpretq_u64_p128(vmull_p64(a, b));
 }
-#else  // ARMv7 polyfill
+
+// ARMv7 polyfill
 // ARMv7/some A64 lacks vmull_p64, but it has vmull_p8.
 //
 // vmull_p8 calculates 8 8-bit->16-bit polynomial multiplies, but we need a
@@ -696,7 +696,7 @@ FORCE_INLINE uint64x2_t _sse2neon_vmull_p64(uint64x1_t _a, uint64x1_t _b)
 // from "Fast Software Polynomial Multiplication on ARM Processors Using the
 // NEON Engine" by Danilo Camara, Conrado Gouvea, Julio Lopez and Ricardo Dahab
 // (https://hal.inria.fr/hal-01506572)
-static uint64x2_t _sse2neon_vmull_p64(uint64x1_t _a, uint64x1_t _b)
+static uint64x2_t _polyfill_vmull_p64(uint64x1_t _a, uint64x1_t _b)
 {
     poly8x8_t a = vreinterpret_p8_u64(_a);
     poly8x8_t b = vreinterpret_p8_u64(_b);
@@ -787,7 +787,6 @@ static uint64x2_t _sse2neon_vmull_p64(uint64x1_t _a, uint64x1_t _b)
     uint8x16_t r = veorq_u8(mix, cross2);
     return vreinterpretq_u64_u8(r);
 }
-#endif  // ARMv7 polyfill
 
 // C equivalent:
 //   __m128i _mm_shuffle_epi32_default(__m128i a,
@@ -8644,23 +8643,50 @@ FORCE_INLINE __m128i _mm_aeskeygenassist_si128(__m128i a, const int rcon)
 // Perform a carry-less multiplication of two 64-bit integers, selected from a
 // and b according to imm8, and store the results in dst.
 // https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_clmulepi64_si128
-FORCE_INLINE __m128i _mm_clmulepi64_si128(__m128i _a, __m128i _b, const int imm)
+// Uses native version of vmull_p64
+FORCE_INLINE __m128i _mm_clmulepi64_si128_native(__m128i _a, __m128i _b, const int imm)
 {
     uint64x2_t a = vreinterpretq_u64_m128i(_a);
     uint64x2_t b = vreinterpretq_u64_m128i(_b);
     switch (imm & 0x11) {
     case 0x00:
         return vreinterpretq_m128i_u64(
-            _sse2neon_vmull_p64(vget_low_u64(a), vget_low_u64(b)));
+            _native_vmull_p64(vget_low_u64(a), vget_low_u64(b)));
     case 0x01:
         return vreinterpretq_m128i_u64(
-            _sse2neon_vmull_p64(vget_high_u64(a), vget_low_u64(b)));
+            _native_vmull_p64(vget_high_u64(a), vget_low_u64(b)));
     case 0x10:
         return vreinterpretq_m128i_u64(
-            _sse2neon_vmull_p64(vget_low_u64(a), vget_high_u64(b)));
+            _native_vmull_p64(vget_low_u64(a), vget_high_u64(b)));
     case 0x11:
         return vreinterpretq_m128i_u64(
-            _sse2neon_vmull_p64(vget_high_u64(a), vget_high_u64(b)));
+            _native_vmull_p64(vget_high_u64(a), vget_high_u64(b)));
+    default:
+        abort();
+    }
+}
+
+// Perform a carry-less multiplication of two 64-bit integers, selected from a
+// and b according to imm8, and store the results in dst.
+// https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_clmulepi64_si128
+// Uses polyfill version of vmull_p64
+FORCE_INLINE __m128i _mm_clmulepi64_si128_polyfill(__m128i _a, __m128i _b, const int imm)
+{
+    uint64x2_t a = vreinterpretq_u64_m128i(_a);
+    uint64x2_t b = vreinterpretq_u64_m128i(_b);
+    switch (imm & 0x11) {
+    case 0x00:
+        return vreinterpretq_m128i_u64(
+            _polyfill_vmull_p64(vget_low_u64(a), vget_low_u64(b)));
+    case 0x01:
+        return vreinterpretq_m128i_u64(
+            _polyfill_vmull_p64(vget_high_u64(a), vget_low_u64(b)));
+    case 0x10:
+        return vreinterpretq_m128i_u64(
+            _polyfill_vmull_p64(vget_low_u64(a), vget_high_u64(b)));
+    case 0x11:
+        return vreinterpretq_m128i_u64(
+            _polyfill_vmull_p64(vget_high_u64(a), vget_high_u64(b)));
     default:
         abort();
     }
