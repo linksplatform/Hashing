@@ -43,8 +43,8 @@ namespace Platform::Hashing::Internal {
 size_t crc32default(const uint8_t* data, size_t bytes, size_t prev);
 
 #ifdef _X86_64_
-size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev);
-size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev);
+size_t crc32sse_with_pclmul(const uint8_t* data, size_t bytes, size_t prev);
+size_t crc32sse_without_pclmul(const uint8_t* data, size_t bytes, size_t prev);
 #elif defined(_AARCH_)
 size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t prev);
 size_t crc32_pclmul_vmull_p64_polyfill_crc32(cosnt uint8_t* data, size_t bytes, size_t prev);
@@ -65,10 +65,10 @@ size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
 #ifdef _X86_64_
   static const X86Features features = GetX86Info().features;
   if(features.sse4_2 && features.pclmulqdq) {
-    ptr = crc32sse2_with_pclmul;
+    ptr = crc32sse_with_pclmul;
   }
   else if(features.sse4_2) {
-    ptr = crc32sse2_without_pclmul;
+    ptr = crc32sse_without_pclmul;
   }
   else {
     ptr = crc32fallback;
@@ -183,7 +183,7 @@ static constexpr uint64_t g_lut[] = {
 };
 
 #ifdef _X86_64_
-target_feature("crc32")
+target_feature("crc32,sse4.2")
 #endif
 void compute_lut(uint32_t *pTbl, uint32_t n) {
   uint64_t R = 1;
@@ -221,8 +221,8 @@ struct CRC<2> {
 static constexpr uint32_t LEAF_SIZE_INTEL = 6 * 24;
 
 #ifdef _X86_64_
-target_feature("crc32,sse4.1,pclmul")
-size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev) {
+target_feature("crc32,sse4.2,pclmul")
+size_t crc32sse_with_pclmul(const uint8_t* data, size_t bytes, size_t prev) {
   uint64_t pA = (uint64_t)data;
   uint64_t crcA = prev;
   uint32_t toAlign = ((uint64_t) - (int64_t)pA) & 7;
@@ -261,8 +261,8 @@ size_t crc32sse2_with_pclmul(const uint8_t* data, size_t bytes, size_t prev) {
   return crcA;
 }
 
-target_feature("crc32")
-size_t crc32sse2_without_pclmul(const uint8_t* data, size_t bytes, size_t prev)
+target_feature("crc32,sse4.2")
+size_t crc32sse_without_pclmul(const uint8_t* data, size_t bytes, size_t prev)
 {
   size_t acc = prev;
   size_t align = (0 - (size_t)data) & 7;
