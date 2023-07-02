@@ -10,8 +10,8 @@
 - std::any
 Use Platform.Hashing.h file to include the whole library.
 </description>
-    <releaseNotes> Added runtime check for cpu configuration </releaseNotes>
-    <version>0.5.1</version>
+    <releaseNotes> Fixed runtime check for aarch64 cpu configuration </releaseNotes>
+    <version>0.5.2</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
