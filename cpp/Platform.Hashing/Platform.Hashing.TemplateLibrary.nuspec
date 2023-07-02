@@ -10,8 +10,8 @@
 - std::any
 Use Platform.Hashing.h file to include the whole library.
 </description>
-    <releaseNotes> Remove compilation flag from cmake </releaseNotes>
-    <version>0.5.3</version>
+    <releaseNotes> Fixed target_feature from x86 </releaseNotes>
+    <version>0.5.4</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
