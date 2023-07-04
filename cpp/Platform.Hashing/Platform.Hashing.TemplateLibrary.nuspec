@@ -10,8 +10,8 @@
 - std::any
 Use Platform.Hashing.h file to include the whole library.
 </description>
-    <releaseNotes> Fixed target_feature from x86 </releaseNotes>
-    <version>0.5.4</version>
+    <releaseNotes> Fixed compilation for msvc </releaseNotes>
+    <version>0.5.5</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
