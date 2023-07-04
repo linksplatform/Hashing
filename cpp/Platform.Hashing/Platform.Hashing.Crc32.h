@@ -13,7 +13,7 @@
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER)
   #define target_feature(feature) __attribute__((target(feature)))
-#elif defined(__MSVC__)
+#elif defined(_MSC_VER)
   #define target_feature(feature) // empty
 #else
   #error "compiler is not supported"
