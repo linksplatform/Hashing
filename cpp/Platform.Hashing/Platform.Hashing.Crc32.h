@@ -288,7 +288,7 @@ size_t crc32sse_without_pclmul(const uint8_t* data, size_t bytes, size_t prev)
 }
 
 #elif defined(_AARCH_)
-target_feature("+crypto")
+target_feature("armv8.2-a+crypto")
 size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t prev) {
   uint64_t pA = (uint64_t)data;
   uint64_t crcA = prev;
