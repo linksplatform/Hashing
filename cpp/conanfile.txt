@@ -1,7 +1,7 @@
 [requires]
 gtest/cci.20210126
 benchmark/1.6.0
-cpu_features/0.8.0
+cpuinfo/cci.20220228
 
 [generators]
 CMakeDeps

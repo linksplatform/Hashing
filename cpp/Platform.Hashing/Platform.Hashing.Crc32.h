@@ -25,13 +25,14 @@
 #define _X86_64_
 #endif
 
+// Library for runtime check of cpu configuration
+#include <cpuinfo.h>
+
 #ifdef _X86_64_
-#include "cpuinfo_x86.h"
 #include <immintrin.h>
 #endif
 
 #ifdef _AARCH_
-#include "cpuinfo_arm.h"
 #include "sse2neon/sse2neon.h"
 #include <arm_acle.h>
 #endif
@@ -60,35 +61,36 @@ size_t crc32(const uint8_t* data, size_t bytes, size_t prev) {
 }
 
 size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
-  using namespace cpu_features;
+  cpuinfo_initialize();
   Crc32FuncPtr ptr;
 #ifdef _X86_64_
-  static const X86Features features = GetX86Info().features;
-  if(features.sse4_2 && features.pclmulqdq) {
+  bool hasSSE42 = cpuinfo_has_x86_sse4_2();
+  bool hasPCLMULDQ = cpuinfo_has_x86_pclmulqdq();
+  if(hasSSE42 && hasPCLMULDQ) {
     ptr = crc32sse_with_pclmul;
   }
-  else if(features.sse4_2) {
+  else if(hasSSE42) {
     ptr = crc32sse_without_pclmul;
   }
   else {
     ptr = crc32fallback;
   }
-  atomicFuncPtr.store(ptr, std::memory_order_relaxed);
-  return crc32(data, bytes, prev);
 #elif defined(_AARCH_)
-  static const Aarch64Features features = GetAarch64Info().features;
-  if(features.crc32 && features.pmull) {
+  bool hasCRC32 = cpuinfo_has_arm_crc32();
+  bool hasPMULL = cpuinfo_has_arm_pmull();
+  if(hasCRC32 && hasPMULL) {
     ptr = crc32_pclmul_vmull_p64_crc32;
   }
-  else if(features.crc32) {
+  else if(hasCRC32) {
     ptr = crc32_pclmul_vmull_p64_polyfill_crc32;
   }
   else {
     ptr = crc32fallback;
   }
+#endif
+  cpuinfo_deinitialize();
   atomicFuncPtr.store(ptr, std::memory_order_relaxed);
   return crc32(data, bytes, prev);
-#endif
 }
 
 static constexpr uint32_t P = 0x82f63b78U;
