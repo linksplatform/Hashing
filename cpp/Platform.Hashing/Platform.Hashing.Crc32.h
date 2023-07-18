@@ -48,7 +48,7 @@ size_t crc32sse_with_pclmul(const uint8_t* data, size_t bytes, size_t prev);
 size_t crc32sse_without_pclmul(const uint8_t* data, size_t bytes, size_t prev);
 #elif defined(_AARCH_)
 size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t prev);
-size_t crc32_pclmul_vmull_p64_polyfill_crc32(cosnt uint8_t* data, size_t bytes, size_t prev);
+size_t crc32_pclmul_vmull_p64_polyfill_crc32(const uint8_t* data, size_t bytes, size_t prev);
 #endif
 size_t crc32fallback(const uint8_t* data, size_t bytes, size_t prev);
 
