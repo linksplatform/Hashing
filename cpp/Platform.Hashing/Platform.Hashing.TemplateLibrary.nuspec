@@ -10,8 +10,8 @@
 - std::any
 Use Platform.Hashing.h file to include the whole library.
 </description>
-    <releaseNotes> Fixed compilation for msvc </releaseNotes>
-    <version>0.5.5</version>
+    <releaseNotes> Fixed compilation for aarch64 architecture </releaseNotes>
+    <version>0.5.6</version>
     <authors>Konstantin Diachenko</authors>
     <owners>Konstantin Diachenko</owners>
     <copyright>Konstantin Diachenko</copyright>
