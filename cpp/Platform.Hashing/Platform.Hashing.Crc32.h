@@ -34,7 +34,6 @@
 
 #ifdef _AARCH_
 #include "sse2neon/sse2neon.h"
-#include <arm_acle.h>
 #endif
 
 #include "Platform.Hashing.CombineHashes.h"
@@ -318,6 +317,14 @@ size_t crc32_pclmul_vmull_p64_crc32(const uint8_t* data, size_t bytes, size_t pr
     bytes -= 24 * n;
     pA = pC;
   }
+
+  for (; bytes >= 8; bytes -= 8, pA += 8)
+    crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA));
+
+  for (; bytes; --bytes, ++pA)
+    crcA = _mm_crc32_u8((uint32_t)crcA, *(uint8_t *)(pA));
+
+  return crcA;
 }
 
 //crc32_pclmul_vmull_p64_polyfill_crc32
@@ -350,6 +357,14 @@ size_t crc32_pclmul_vmull_p64_polyfill_crc32(const uint8_t* data, size_t bytes, 
     bytes -= 24 * n;
     pA = pC;
   }
+
+  for (; bytes >= 8; bytes -= 8, pA += 8)
+    crcA = _mm_crc32_u64(crcA, *(uint64_t *)(pA));
+
+  for (; bytes; --bytes, ++pA)
+    crcA = _mm_crc32_u8((uint32_t)crcA, *(uint8_t *)(pA));
+
+  return crcA;
 }
 #endif
 
