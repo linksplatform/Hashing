@@ -86,6 +86,8 @@ size_t crc32default(const uint8_t* data, size_t bytes, size_t prev) {
   else {
     ptr = crc32fallback;
   }
+#else
+  ptr = crc32fallback;
 #endif
   cpuinfo_deinitialize();
   atomicFuncPtr.store(ptr, std::memory_order_relaxed);
