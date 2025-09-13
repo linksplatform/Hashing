@@ -171,4 +171,197 @@ namespace Platform::Hashing::Tests
             ASSERT_EQ(hash1, hash2);
         }
     }
+
+    TEST(ProcessorArchitectureTest, FallbackImplementationConsistency)
+    {
+        const std::uint8_t testData[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+        const std::size_t dataSize = sizeof(testData);
+        const std::size_t initialHash = 0x12345678;
+        
+        std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(testData, dataSize, initialHash);
+        ASSERT_NE(0U, fallbackResult);
+        
+        std::size_t fallbackResult2 = Platform::Hashing::Internal::crc32fallback(testData, dataSize, initialHash);
+        ASSERT_EQ(fallbackResult, fallbackResult2);
+    }
+
+#ifdef _X86_64_
+    TEST(ProcessorArchitectureTest, X86_64ImplementationsConsistency)
+    {
+        const std::uint8_t testData[] = {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+            0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+            0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+        };
+        const std::size_t dataSize = sizeof(testData);
+        const std::size_t initialHash = 0;
+        
+        std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(testData, dataSize, initialHash);
+        std::size_t sseWithoutPclmulResult = Platform::Hashing::Internal::crc32sse_without_pclmul(testData, dataSize, initialHash);
+        
+        ASSERT_NE(0U, fallbackResult);
+        ASSERT_NE(0U, sseWithoutPclmulResult);
+        
+        std::size_t sseWithPclmulResult = Platform::Hashing::Internal::crc32sse_with_pclmul(testData, dataSize, initialHash);
+        ASSERT_NE(0U, sseWithPclmulResult);
+    }
+
+    TEST(ProcessorArchitectureTest, X86_64LargeDataConsistency)
+    {
+        std::vector<std::uint8_t> largeData(1024);
+        for (std::size_t i = 0; i < largeData.size(); ++i) {
+            largeData[i] = static_cast<std::uint8_t>(i & 0xFF);
+        }
+        
+        const std::size_t initialHash = 0x87654321;
+        
+        std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(largeData.data(), largeData.size(), initialHash);
+        std::size_t sseWithoutPclmulResult = Platform::Hashing::Internal::crc32sse_without_pclmul(largeData.data(), largeData.size(), initialHash);
+        std::size_t sseWithPclmulResult = Platform::Hashing::Internal::crc32sse_with_pclmul(largeData.data(), largeData.size(), initialHash);
+        
+        ASSERT_NE(0U, fallbackResult);
+        ASSERT_NE(0U, sseWithoutPclmulResult);
+        ASSERT_NE(0U, sseWithPclmulResult);
+    }
+#endif
+
+#ifdef _AARCH_
+    TEST(ProcessorArchitectureTest, ARMImplementationsConsistency)
+    {
+        const std::uint8_t testData[] = {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+            0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+            0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+        };
+        const std::size_t dataSize = sizeof(testData);
+        const std::size_t initialHash = 0;
+        
+        std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(testData, dataSize, initialHash);
+        std::size_t armCrc32Result = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_crc32(testData, dataSize, initialHash);
+        std::size_t armPolyfillResult = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_polyfill_crc32(testData, dataSize, initialHash);
+        
+        ASSERT_NE(0U, fallbackResult);
+        ASSERT_NE(0U, armCrc32Result);
+        ASSERT_NE(0U, armPolyfillResult);
+    }
+
+    TEST(ProcessorArchitectureTest, ARMLargeDataConsistency)
+    {
+        std::vector<std::uint8_t> largeData(1024);
+        for (std::size_t i = 0; i < largeData.size(); ++i) {
+            largeData[i] = static_cast<std::uint8_t>(i & 0xFF);
+        }
+        
+        const std::size_t initialHash = 0x87654321;
+        
+        std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(largeData.data(), largeData.size(), initialHash);
+        std::size_t armCrc32Result = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_crc32(largeData.data(), largeData.size(), initialHash);
+        std::size_t armPolyfillResult = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_polyfill_crc32(largeData.data(), largeData.size(), initialHash);
+        
+        ASSERT_NE(0U, fallbackResult);
+        ASSERT_NE(0U, armCrc32Result);
+        ASSERT_NE(0U, armPolyfillResult);
+    }
+#endif
+
+    TEST(ProcessorArchitectureTest, RuntimeDispatchConsistency)
+    {
+        const std::uint8_t testData[] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11};
+        const std::size_t dataSize = sizeof(testData);
+        
+        std::size_t hash1 = 0;
+        std::size_t hash2 = 0;
+        
+        Combine(hash1, testData, dataSize);
+        Combine(hash2, testData, dataSize);
+        
+        ASSERT_EQ(hash1, hash2);
+        ASSERT_NE(0U, hash1);
+    }
+
+    TEST(ProcessorArchitectureTest, EmptyDataHandling)
+    {
+        const std::uint8_t* emptyData = nullptr;
+        const std::size_t emptySize = 0;
+        const std::size_t initialHash = 0x12345678;
+        
+        std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(emptyData, emptySize, initialHash);
+        ASSERT_EQ(initialHash, fallbackResult);
+        
+#ifdef _X86_64_
+        std::size_t sseWithoutPclmulResult = Platform::Hashing::Internal::crc32sse_without_pclmul(emptyData, emptySize, initialHash);
+        ASSERT_EQ(initialHash, sseWithoutPclmulResult);
+        
+        std::size_t sseWithPclmulResult = Platform::Hashing::Internal::crc32sse_with_pclmul(emptyData, emptySize, initialHash);
+        ASSERT_EQ(initialHash, sseWithPclmulResult);
+#endif
+
+#ifdef _AARCH_
+        std::size_t armCrc32Result = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_crc32(emptyData, emptySize, initialHash);
+        ASSERT_EQ(initialHash, armCrc32Result);
+        
+        std::size_t armPolyfillResult = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_polyfill_crc32(emptyData, emptySize, initialHash);
+        ASSERT_EQ(initialHash, armPolyfillResult);
+#endif
+    }
+
+    TEST(ProcessorArchitectureTest, SingleByteHandling)
+    {
+        const std::uint8_t singleByte = 0x42;
+        const std::size_t initialHash = 0;
+        
+        std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(&singleByte, 1, initialHash);
+        ASSERT_NE(initialHash, fallbackResult);
+        
+#ifdef _X86_64_
+        std::size_t sseWithoutPclmulResult = Platform::Hashing::Internal::crc32sse_without_pclmul(&singleByte, 1, initialHash);
+        ASSERT_NE(initialHash, sseWithoutPclmulResult);
+        
+        std::size_t sseWithPclmulResult = Platform::Hashing::Internal::crc32sse_with_pclmul(&singleByte, 1, initialHash);
+        ASSERT_NE(initialHash, sseWithPclmulResult);
+#endif
+
+#ifdef _AARCH_
+        std::size_t armCrc32Result = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_crc32(&singleByte, 1, initialHash);
+        ASSERT_NE(initialHash, armCrc32Result);
+        
+        std::size_t armPolyfillResult = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_polyfill_crc32(&singleByte, 1, initialHash);
+        ASSERT_NE(initialHash, armPolyfillResult);
+#endif
+    }
+
+    TEST(ProcessorArchitectureTest, UnalignedDataHandling)
+    {
+        std::uint8_t buffer[64];
+        for (int i = 0; i < 64; ++i) {
+            buffer[i] = static_cast<std::uint8_t>(i);
+        }
+        
+        for (int offset = 0; offset < 8; ++offset) {
+            const std::uint8_t* data = buffer + offset;
+            const std::size_t dataSize = 32 - offset;
+            const std::size_t initialHash = 0;
+            
+            std::size_t fallbackResult = Platform::Hashing::Internal::crc32fallback(data, dataSize, initialHash);
+            ASSERT_NE(0U, fallbackResult);
+            
+#ifdef _X86_64_
+            std::size_t sseWithoutPclmulResult = Platform::Hashing::Internal::crc32sse_without_pclmul(data, dataSize, initialHash);
+            ASSERT_NE(0U, sseWithoutPclmulResult);
+            
+            std::size_t sseWithPclmulResult = Platform::Hashing::Internal::crc32sse_with_pclmul(data, dataSize, initialHash);
+            ASSERT_NE(0U, sseWithPclmulResult);
+#endif
+
+#ifdef _AARCH_
+            std::size_t armCrc32Result = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_crc32(data, dataSize, initialHash);
+            ASSERT_NE(0U, armCrc32Result);
+            
+            std::size_t armPolyfillResult = Platform::Hashing::Internal::crc32_pclmul_vmull_p64_polyfill_crc32(data, dataSize, initialHash);
+            ASSERT_NE(0U, armPolyfillResult);
+#endif
+        }
+    }
 }
